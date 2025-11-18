@@ -13,12 +13,159 @@ import {
   Divider,
   Alert
 } from '@mui/material';
+import { styled, keyframes } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+
+// Animations
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+// Styled Components
+const GradientBackground = styled(Box)({
+  minHeight: '100vh',
+  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)',
+    pointerEvents: 'none',
+  }
+});
+
+const GlassAppBar = styled(AppBar)({
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(20px)',
+  borderBottom: '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: '0 4px 20px rgba(59, 130, 246, 0.08)',
+});
+
+const MainCard = styled(Paper)({
+  background: 'rgba(255, 255, 255, 0.98)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: '20px',
+  border: '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: '0 10px 25px rgba(59, 130, 246, 0.1)',
+  animation: `${fadeInUp} 0.8s ease-out`,
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+});
+
+const QuestionCard = styled(Paper)({
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: '16px',
+  border: '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: '0 8px 20px rgba(59, 130, 246, 0.08)',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  animation: `${fadeInUp} 0.8s ease-out`,
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 12px 30px rgba(59, 130, 246, 0.15)',
+    border: '1px solid rgba(59, 130, 246, 0.2)',
+  }
+});
+
+const StyledButton = styled(Button)({
+  borderRadius: '12px',
+  padding: '10px 24px',
+  fontWeight: '600',
+  textTransform: 'none',
+  fontSize: '0.95rem',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+    transition: 'left 0.6s',
+  },
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    '&::before': {
+      left: '100%',
+    }
+  }
+});
+
+const PrimaryButton = styled(StyledButton)({
+  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+  color: 'white',
+  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.25)',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
+    transform: 'translateY(-2px)',
+  },
+  '&:disabled': {
+    background: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)',
+    boxShadow: 'none',
+    transform: 'none',
+  }
+});
+
+const SecondaryButton = styled(StyledButton)({
+  border: '1px solid rgba(59, 130, 246, 0.3)',
+  color: '#1e40af',
+  background: 'rgba(59, 130, 246, 0.05)',
+  '&:hover': {
+    background: 'rgba(59, 130, 246, 0.1)',
+    border: '1px solid rgba(59, 130, 246, 0.5)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.15)',
+  }
+});
+
+const StyledTextField = styled(TextField)({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    background: 'rgba(255, 255, 255, 0.8)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.9)',
+    },
+    '&.Mui-focused': {
+      background: 'rgba(255, 255, 255, 1)',
+      '& fieldset': {
+        borderColor: '#3b82f6',
+        borderWidth: '2px',
+      }
+    }
+  }
+});
+
+const DeleteButton = styled(IconButton)({
+  color: '#ef4444',
+  background: 'rgba(239, 68, 68, 0.1)',
+  borderRadius: '12px',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    background: 'rgba(239, 68, 68, 0.2)',
+    transform: 'scale(1.1)',
+    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+  }
+});
 
 export default function CreateQuiz() {
   const navigate = useNavigate();
@@ -131,34 +278,67 @@ export default function CreateQuiz() {
   };
 
   return (
-    <>
-      <AppBar position="static">
+    <GradientBackground>
+      <GlassAppBar position="static" elevation={0}>
         <Toolbar>
           <IconButton
             edge="start"
-            color="inherit"
             onClick={() => navigate('/teacher/dashboard')}
+            sx={{ 
+              color: '#1e40af',
+              background: 'rgba(59, 130, 246, 0.1)',
+              borderRadius: '12px',
+              '&:hover': {
+                background: 'rgba(59, 130, 246, 0.2)',
+                transform: 'scale(1.1)',
+              },
+              transition: 'all 0.3s ease'
+            }}
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, color: '#000000', fontWeight: '600', ml: 2 }}>
             Create New Quiz
           </Typography>
         </Toolbar>
-      </AppBar>
+      </GlassAppBar>
 
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Quiz created successfully! Redirecting...</Alert>}
+      <Container maxWidth="md" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 2, 
+              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.2)'
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert 
+            severity="success" 
+            sx={{ 
+              mb: 2, 
+              borderRadius: '12px',
+              background: 'rgba(34, 197, 94, 0.1)',
+              border: '1px solid rgba(34, 197, 94, 0.2)'
+            }}
+          >
+            Quiz created successfully! Redirecting...
+          </Alert>
+        )}
 
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <MainCard sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             {/* Quiz Details */}
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h5" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3 }}>
               Quiz Details
             </Typography>
 
-            <TextField
+            <StyledTextField
               fullWidth
               required
               label="Quiz Title"
@@ -167,7 +347,7 @@ export default function CreateQuiz() {
               sx={{ mt: 2 }}
             />
 
-            <TextField
+            <StyledTextField
               fullWidth
               required
               label="Subject"
@@ -176,7 +356,7 @@ export default function CreateQuiz() {
               sx={{ mt: 2 }}
             />
 
-            <TextField
+            <StyledTextField
               fullWidth
               type="number"
               label="Time per Question (seconds)"
@@ -186,25 +366,27 @@ export default function CreateQuiz() {
               inputProps={{ min: 5, max: 60 }}
             />
 
-            <Divider sx={{ my: 4 }} />
+            <Divider sx={{ my: 4, background: 'rgba(59, 130, 246, 0.1)' }} />
 
             {/* Questions */}
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h5" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3 }}>
               Questions
             </Typography>
 
             {quizData.questions.map((question, qIndex) => (
-              <Paper key={qIndex} variant="outlined" sx={{ p: 3, mt: 3 }}>
+              <QuestionCard key={qIndex} sx={{ p: 3, mt: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">Question {qIndex + 1}</Typography>
+                  <Typography variant="h6" sx={{ color: '#000000', fontWeight: '600' }}>
+                    Question {qIndex + 1}
+                  </Typography>
                   {quizData.questions.length > 1 && (
-                    <IconButton color="error" onClick={() => deleteQuestion(qIndex)}>
+                    <DeleteButton onClick={() => deleteQuestion(qIndex)}>
                       <DeleteIcon />
-                    </IconButton>
+                    </DeleteButton>
                   )}
                 </Box>
 
-                <TextField
+                <StyledTextField
                   fullWidth
                   required
                   label="Question Text"
@@ -215,16 +397,16 @@ export default function CreateQuiz() {
                   sx={{ mt: 2 }}
                 />
 
-                <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, color: '#000000', fontWeight: '600' }}>
                   Options:
                 </Typography>
 
                 {question.options.map((option, optIndex) => (
                   <Box key={optIndex} sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                    <Typography sx={{ mr: 2, minWidth: 80 }}>
+                    <Typography sx={{ mr: 2, minWidth: 80, color: '#666666' }}>
                       Option {optIndex + 1}:
                     </Typography>
-                    <TextField
+                    <StyledTextField
                       fullWidth
                       required
                       value={option}
@@ -235,46 +417,52 @@ export default function CreateQuiz() {
                       variant={question.correctAnswer === optIndex ? 'contained' : 'outlined'}
                       color="success"
                       size="small"
-                      sx={{ ml: 2 }}
+                      sx={{ 
+                        ml: 2,
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: '600',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                        }
+                      }}
                       onClick={() => handleQuestionChange(qIndex, 'correctAnswer', optIndex)}
                     >
                       {question.correctAnswer === optIndex ? 'Correct ✓' : 'Mark Correct'}
                     </Button>
                   </Box>
                 ))}
-              </Paper>
+              </QuestionCard>
             ))}
 
-            <Button
-              variant="outlined"
+            <SecondaryButton
               startIcon={<AddIcon />}
               onClick={addQuestion}
               sx={{ mt: 3 }}
               fullWidth
             >
               Add Another Question
-            </Button>
+            </SecondaryButton>
 
             <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-              <Button
-                variant="outlined"
+              <SecondaryButton
                 onClick={() => navigate('/teacher/dashboard')}
                 fullWidth
               >
                 Cancel
-              </Button>
-              <Button
+              </SecondaryButton>
+              <PrimaryButton
                 type="submit"
-                variant="contained"
                 fullWidth
                 disabled={loading}
               >
                 {loading ? 'Creating Quiz...' : 'Create Quiz'}
-              </Button>
+              </PrimaryButton>
             </Box>
           </form>
-        </Paper>
+        </MainCard>
       </Container>
-    </>
+    </GradientBackground>
   );
 }
