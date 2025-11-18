@@ -23,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -355,9 +356,26 @@ export default function MyQuizzes() {
                     </Box>
                     
                     <QuizCodeBox>
-                      <Typography variant="body2" sx={{ color: '#000000', fontWeight: '600', textAlign: 'center' }}>
-                        Quiz Code: {quiz.quizCode}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography variant="body2" sx={{ color: '#000000', fontWeight: '600' }}>
+                          Quiz Code: {quiz.quizCode}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            navigator.clipboard.writeText(quiz.quizCode);
+                            alert('Quiz code copied to clipboard!');
+                          }}
+                          sx={{
+                            color: '#3b82f6',
+                            '&:hover': {
+                              background: 'rgba(59, 130, 246, 0.1)',
+                            }
+                          }}
+                        >
+                          <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </QuizCodeBox>
                   </CardContent>
                   
