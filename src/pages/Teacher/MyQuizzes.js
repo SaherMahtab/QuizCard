@@ -24,6 +24,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Snackbar, Alert } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -219,6 +220,7 @@ export default function MyQuizzes() {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [copySnackbar, setCopySnackbar] = useState(false);
 
   useEffect(() => {
     fetchQuizzes();
@@ -364,7 +366,7 @@ export default function MyQuizzes() {
                           size="small"
                           onClick={() => {
                             navigator.clipboard.writeText(quiz.quizCode);
-                            alert('Quiz code copied to clipboard!');
+                            setCopySnackbar(true);
                           }}
                           sx={{
                             color: '#3b82f6',
@@ -409,6 +411,26 @@ export default function MyQuizzes() {
           </Grid>
         )}
       </Container>
+
+      <Snackbar
+              open={copySnackbar}
+              autoHideDuration={2000}
+              onClose={() => setCopySnackbar(false)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+              <Alert
+                onClose={() => setCopySnackbar(false)}
+                severity="success"
+                sx={{
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: 'white',
+                  fontWeight: '600'
+                }}
+              >
+                Quiz code copied to clipboard!
+              </Alert>
+            </Snackbar>
+
     </GradientBackground>
   );
 }
