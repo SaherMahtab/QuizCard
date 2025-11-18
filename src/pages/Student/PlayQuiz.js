@@ -7,113 +7,205 @@ import {
   Button,
   Box,
   Card,
-  CardContent,
   LinearProgress,
   AppBar,
   Toolbar,
   Chip,
-  Fade,
-  Zoom
+  Fade
 } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import TimerIcon from '@mui/icons-material/Timer';
-import QuizIcon from '@mui/icons-material/Quiz';
+import {
+  EmojiEvents as EmojiEventsIcon,
+  Timer as TimerIcon,
+  Quiz as QuizIcon,
+  CheckCircle as CheckCircleIcon,
+  PlayArrow as PlayArrowIcon
+} from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
-// Animations
-const pulse = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
-
+// Animations (reduced intensity)
 const shake = keyframes`
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-10px); }
-  75% { transform: translateX(10px); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
 `;
 
-const flipIn = keyframes`
+// Professional card flip animation
+const cardFlip = keyframes`
+  0% {
+    transform: perspective(1000px) rotateY(0deg);
+  }
+  50% {
+    transform: perspective(1000px) rotateY(-90deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateY(0deg);
+  }
+`;
+
+// Subtle fade animation for loading states
+const fadeIn = keyframes`
   from {
-    transform: perspective(400px) rotateY(90deg);
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
-    transform: perspective(400px) rotateY(0deg);
     opacity: 1;
+    transform: translateY(0);
   }
 `;
 
-// Styled Components
-const GradientAppBar = styled(AppBar)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-}));
-
-const QuizStartCard = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  color: 'white',
-  padding: theme.spacing(5),
-  borderRadius: '20px',
-  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-  animation: `${flipIn} 0.6s ease-out`,
-}));
-
-const ResultCard = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  color: 'white',
-  padding: theme.spacing(5),
-  borderRadius: '20px',
-  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-  textAlign: 'center',
-  animation: `${flipIn} 0.8s ease-out`,
-}));
-
-const QuestionCard = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  color: 'white',
-  padding: theme.spacing(4),
-  borderRadius: '15px',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-  animation: `${flipIn} 0.5s ease-out`,
-  marginBottom: theme.spacing(3),
-}));
-
-const AnswerCard = styled(Card)(({ selected, isanimating }) => ({
-  cursor: 'pointer',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  borderRadius: '12px',
-  border: selected ? '3px solid #667eea' : '2px solid #e0e0e0',
-  background: selected
-    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    : 'white',
-  transform: selected ? 'scale(1.05)' : 'scale(1)',
-  boxShadow: selected
-    ? '0 8px 24px rgba(102, 126, 234, 0.4)'
-    : '0 2px 8px rgba(0,0,0,0.1)',
-  animation: isanimating === 'true' ? `${pulse} 0.5s ease-in-out` : 'none',
-  height: '100%',
+// Main quiz card container
+const QuizCardContainer = styled(Card)(({ theme, isFlipping }) => ({
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: '24px',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  padding: '32px',
+  minHeight: '600px',
   display: 'flex',
   flexDirection: 'column',
+  animation: isFlipping ? `${cardFlip} 0.6s ease-in-out` : 'none',
+  transformStyle: 'preserve-3d',
+  position: 'relative',
   '&:hover': {
-    transform: 'translateY(-4px) scale(1.02)',
-    boxShadow: '0 12px 24px rgba(0,0,0,0.15)',
+    boxShadow: '0 25px 30px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.06)',
   },
+  transition: 'all 0.3s ease'
+}));
+
+// Styled Components
+const GradientBackground = styled(Box)({
+  minHeight: '100vh',
+  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: `
+      radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)
+    `,
+    pointerEvents: 'none',
+  }
+});
+
+const GlassAppBar = styled(AppBar)({
+  background: 'rgba(255, 255, 255, 0.25)',
+  backdropFilter: 'blur(20px)',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+});
+
+const QuizStartCard = styled(Paper)({
+  background: 'rgba(255, 255, 255, 0.25)',
+  backdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  borderRadius: '20px',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  animation: `${fadeIn} 0.6s ease-out`,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+  }
+});
+
+const ResultCard = styled(Paper)({
+  background: 'rgba(255, 255, 255, 0.25)',
+  backdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  borderRadius: '20px',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  textAlign: 'center',
+  animation: `${fadeIn} 0.6s ease-out`,
+});
+
+// Question card within the main quiz card
+const QuestionCard = styled(Paper)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+  borderRadius: '16px',
+  padding: '24px',
+  marginBottom: '24px',
+  border: '2px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  '& h4': {
+    color: '#1e293b',
+    lineHeight: 1.4,
+    fontWeight: '600'
+  }
+}));
+
+// Option cards that look like actual cards
+const OptionCard = styled(Paper)(({ selected, theme }) => ({
+  background: selected 
+    ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+    : 'rgba(255, 255, 255, 0.9)',
+  borderRadius: '16px',
+  padding: '20px',
+  border: selected 
+    ? '2px solid #1d4ed8' 
+    : '2px solid rgba(59, 130, 246, 0.2)',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  minHeight: '80px',
+  display: 'flex',
+  alignItems: 'center',
+  boxShadow: selected
+    ? '0 8px 25px -5px rgba(59, 130, 246, 0.3)'
+    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: selected
+      ? '0 12px 30px -5px rgba(59, 130, 246, 0.4)'
+      : '0 8px 25px -5px rgba(59, 130, 246, 0.15)',
+    borderColor: '#3b82f6'
+  },
+  '& .option-text': {
+    color: selected ? 'white' : '#1e293b',
+    fontWeight: selected ? '600' : '500',
+    fontSize: '1.1rem',
+    width: '100%'
+  }
 }));
 
 const TimerChip = styled(Chip)(({ warning }) => ({
-  fontWeight: 'bold',
+  fontWeight: '600',
   fontSize: '1.1rem',
   padding: '20px 10px',
   animation: warning === 'true' ? `${shake} 0.5s infinite` : 'none',
   background: warning === 'true'
-    ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-    : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+    : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
   color: 'white',
+  border: '2px solid rgba(255, 255, 255, 0.3)',
 }));
+
+const StartButton = styled(Button)({
+  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+  borderRadius: '12px',
+  padding: '12px 32px',
+  color: 'white',
+  fontWeight: '600',
+  textTransform: 'none',
+  fontSize: '1.1rem',
+  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
+  border: 'none',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
+  }
+});
 
 export default function PlayQuiz() {
   const { quizCode } = useParams();
@@ -129,7 +221,7 @@ export default function PlayQuiz() {
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [score, setScore] = useState(0);
-  const [animatingCard, setAnimatingCard] = useState(null);
+  const [isCardFlipping, setIsCardFlipping] = useState(false);
 
   useEffect(() => {
     fetchQuiz();
@@ -162,12 +254,30 @@ export default function PlayQuiz() {
         return;
       }
 
-      const quizData = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+      const quizDoc = querySnapshot.docs[0];
+      const quizData = { id: quizDoc.id, ...quizDoc.data() };
+
+      // Check if student has already attempted this quiz
+      const scoreQuery = query(
+        collection(db, 'scores'),
+        where('studentId', '==', currentUser.uid),
+        where('quizId', '==', quizData.id)
+      );
+      const scoreSnapshot = await getDocs(scoreQuery);
+
+      if (!scoreSnapshot.empty) {
+        // Student has already attempted this quiz
+        alert('You have already attempted this quiz. Each student can attempt a quiz only once.');
+        navigate('/student/dashboard');
+        return;
+      }
+
       setQuiz(quizData);
+      setTimeLeft(quizData.timeLimit * 60);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching quiz:', error);
-      alert('Error loading quiz');
+      alert('Error loading quiz. Please try again.');
       navigate('/student/dashboard');
     }
   };
@@ -179,8 +289,6 @@ export default function PlayQuiz() {
 
   const handleAnswerSelect = (optionIndex) => {
     setSelectedAnswer(optionIndex);
-    setAnimatingCard(optionIndex);
-    setTimeout(() => setAnimatingCard(null), 500);
   };
 
   const handleNextQuestion = () => {
@@ -201,11 +309,17 @@ export default function PlayQuiz() {
       setScore(score + 1);
     }
 
-    // Move to next question or finish
+    // Move to next question or finish with card flip animation
     if (currentQuestionIndex < quiz.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
-      setTimeLeft(quiz.timePerQuestion);
+      // Trigger card flip animation
+      setIsCardFlipping(true);
+      
+      setTimeout(() => {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setSelectedAnswer(null);
+        setTimeLeft(quiz.timePerQuestion);
+        setIsCardFlipping(false);
+      }, 300); // Half of flip animation duration
     } else {
       finishQuiz([...answers, answerData], isCorrect ? score + 1 : score);
     }
@@ -215,7 +329,7 @@ export default function PlayQuiz() {
     setQuizCompleted(true);
 
     try {
-      await addDoc(collection(db, 'scores'), {
+      const scoreData = {
         studentId: currentUser.uid,
         quizId: quiz.id,
         quizTitle: quiz.title,
@@ -223,7 +337,10 @@ export default function PlayQuiz() {
         totalQuestions: quiz.questions.length,
         answers: finalAnswers,
         completedAt: new Date().toISOString()
-      });
+      };
+      
+      const docRef = await addDoc(collection(db, 'scores'), scoreData);
+      console.log('Score saved successfully with ID:', docRef.id);
     } catch (error) {
       console.error('Error saving score:', error);
     }
@@ -245,213 +362,221 @@ export default function PlayQuiz() {
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
   return (
-    <>
-      <GradientAppBar position="static">
+    <GradientBackground>
+      <GlassAppBar position="static" elevation={0}>
         <Toolbar>
-          <QuizIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <QuizIcon sx={{ mr: 2, color: '#3b82f6', fontSize: 28 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1, color: '#000000', fontWeight: '600' }}>
             {quiz.title}
           </Typography>
           {quizStarted && !quizCompleted && (
             <TimerChip
               icon={<TimerIcon />}
               label={`${timeLeft}s`}
-              warning={timeLeft <= 3 ? 'true' : 'false'}
+              warning={timeLeft <= 10 ? 'true' : 'false'}
             />
           )}
         </Toolbar>
-      </GradientAppBar>
+      </GlassAppBar>
 
-      <Box
-        sx={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          py: 4,
-        }}
-      >
-        <Container maxWidth="md">
-          {!quizStarted ? (
-            <Fade in timeout={800}>
-              <QuizStartCard elevation={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <EmojiEventsIcon sx={{ fontSize: 80, mb: 2 }} />
-                  <Typography variant="h3" gutterBottom fontWeight="bold">
-                    {quiz.title}
-                  </Typography>
-                  <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
-                    {quiz.subject}
-                  </Typography>
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant="h6" sx={{ mb: 1 }}>
-                      📝 {quiz.questions.length} Questions
-                    </Typography>
-                    <Typography variant="h6">
-                      ⏱️ {quiz.timePerQuestion} seconds per question
-                    </Typography>
-                  </Box>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={startQuiz}
-                    sx={{
-                      px: 6,
-                      py: 2,
-                      fontSize: '1.2rem',
-                      borderRadius: '50px',
-                      background: 'white',
-                      color: '#667eea',
-                      fontWeight: 'bold',
-                      '&:hover': {
-                        background: '#f5f5f5',
-                        transform: 'scale(1.05)',
-                      },
-                    }}
-                  >
-                    Start Quiz 🚀
-                  </Button>
-                </Box>
-              </QuizStartCard>
-            </Fade>
-          ) : quizCompleted ? (
-            <Zoom in timeout={800}>
-              <ResultCard elevation={3}>
-                <EmojiEventsIcon sx={{ fontSize: 100, mb: 2 }} />
-                <Typography variant="h3" gutterBottom fontWeight="bold">
-                  Quiz Completed! 🎉
+      <Container maxWidth="md" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
+        {!quizStarted ? (
+          <QuizStartCard sx={{ p: 5 }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <EmojiEventsIcon sx={{ fontSize: 80, mb: 2, color: '#3b82f6' }} />
+              <Typography 
+                variant="h3" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: '700',
+                  color: '#000000',
+                  mb: 2
+                }}
+              >
+                {quiz.title}
+              </Typography>
+              <Typography variant="h5" sx={{ mb: 3, color: '#666666', fontWeight: '500' }}>
+                📚 {quiz.subject}
+              </Typography>
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" sx={{ mb: 1, color: '#000000', fontWeight: '600' }}>
+                  📝 {quiz.questions.length} Questions
                 </Typography>
-                <Typography variant="h2" sx={{ my: 3, fontWeight: 'bold' }}>
-                  {score} / {quiz.questions.length}
+                <Typography variant="h6" sx={{ color: '#000000', fontWeight: '600' }}>
+                  ⏱️ {quiz.timePerQuestion} seconds per question
                 </Typography>
-                <Typography variant="h4" gutterBottom>
-                  {((score / quiz.questions.length) * 100).toFixed(1)}%
-                </Typography>
-                <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={() => navigate('/student/dashboard')}
-                    sx={{
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: '50px',
-                      background: 'white',
-                      color: '#4facfe',
-                      fontWeight: 'bold',
-                      '&:hover': { background: '#f5f5f5' },
-                    }}
-                  >
-                    Dashboard
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    onClick={() => navigate(`/student/leaderboard/${quizCode}`)}
-                    sx={{
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: '50px',
-                      borderColor: 'white',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      '&:hover': { borderColor: 'white', background: 'rgba(255,255,255,0.1)' },
-                    }}
-                  >
-                    View Leaderboard
-                  </Button>
-                </Box>
-              </ResultCard>
-            </Zoom>
+              </Box>
+              <StartButton
+                variant="contained"
+                size="large"
+                onClick={startQuiz}
+                startIcon={<PlayArrowIcon />}
+              >
+                Start Quiz 🚀
+              </StartButton>
+            </Box>
+          </QuizStartCard>
+        ) : quizCompleted ? (
+          <Fade in timeout={600}>
+            <ResultCard sx={{ p: 5, textAlign: 'center' }}>
+              <CheckCircleIcon sx={{ fontSize: 100, mb: 2, color: '#22c55e' }} />
+              <Typography 
+                variant="h3" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: '700',
+                  color: '#000000'
+                }}
+              >
+                Quiz Completed! 🎉
+              </Typography>
+              <Typography 
+                variant="h2" 
+                sx={{ 
+                  my: 3, 
+                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent'
+                }}
+              >
+                {score} / {quiz.questions.length}
+              </Typography>
+              <Typography variant="h4" gutterBottom sx={{ color: '#666666', fontWeight: '500' }}>
+                {((score / quiz.questions.length) * 100).toFixed(1)}%
+              </Typography>
+              <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => navigate('/student/dashboard')}
+                  sx={{
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: '50px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    '&:hover': { 
+                      background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                      transform: 'translateY(-1px)' 
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={() => navigate(`/student/leaderboard/${quizCode}`)}
+                  sx={{
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: '50px',
+                    borderColor: '#3b82f6',
+                    color: '#3b82f6',
+                    fontWeight: 'bold',
+                    '&:hover': { 
+                      borderColor: '#1d4ed8', 
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      transform: 'translateY(-1px)' 
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  View Leaderboard
+                </Button>
+              </Box>
+            </ResultCard>
+          </Fade>
           ) : (
             <>
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="body1" gutterBottom sx={{ fontWeight: 'bold' }}>
+              <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: '#1e293b' }}>
                   Question {currentQuestionIndex + 1} of {quiz.questions.length}
                 </Typography>
                 <LinearProgress
                   variant="determinate"
                   value={progress}
                   sx={{
-                    height: 10,
-                    borderRadius: 5,
-                    backgroundColor: 'rgba(255,255,255,0.3)',
+                    height: 12,
+                    borderRadius: 6,
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     '& .MuiLinearProgress-bar': {
-                      background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                      background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
+                      borderRadius: 6,
                     },
                   }}
                 />
               </Box>
 
-              <QuestionCard elevation={3}>
-                <Typography variant="h4" fontWeight="bold">
-                  {currentQuestion.questionText}
-                </Typography>
-              </QuestionCard>
+              <QuizCardContainer elevation={0} isFlipping={isCardFlipping}>
+                <QuestionCard elevation={0}>
+                  <Typography variant="h4" sx={{ fontWeight: '600', textAlign: 'center', mb: 2 }}>
+                    {currentQuestion.questionText}
+                  </Typography>
+                </QuestionCard>
 
-              <Box sx={{ maxWidth: '800px', margin: '0 auto' }}>
-                <Box sx={{
+                <Box sx={{ 
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: 2,
-                  '@media (max-width: 600px)': {
-                    gridTemplateColumns: '1fr'
-                  }
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  gap: 3,
+                  flex: 1
                 }}>
                   {currentQuestion.options.map((option, index) => (
-                    <Fade in timeout={300 + index * 100} key={index}>
-                      <Box>
-                        <AnswerCard
-                          selected={selectedAnswer === index}
-                          isanimating={animatingCard === index ? 'true' : 'false'}
-                          onClick={() => handleAnswerSelect(index)}
-                        >
-                          <CardContent sx={{ display: 'flex', alignItems: 'center', padding: '24px !important', minHeight: '80px' }}>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                color: selectedAnswer === index ? 'white' : '#333',
-                                fontWeight: selectedAnswer === index ? 'bold' : 'normal',
-                                wordBreak: 'break-word',
-                                width: '100%',
-                              }}
-                            >
-                              {String.fromCharCode(65 + index)}. {option}
-                            </Typography>
-                          </CardContent>
-                        </AnswerCard>
-                      </Box>
-                    </Fade>
+                    <OptionCard
+                      key={`${currentQuestionIndex}-${index}`}
+                      selected={selectedAnswer === index}
+                      onClick={() => handleAnswerSelect(index)}
+                      elevation={0}
+                    >
+                      <Typography className="option-text">
+                        <Box component="span" sx={{ 
+                          fontWeight: '700', 
+                          mr: 2, 
+                          fontSize: '1.2rem',
+                          color: selectedAnswer === index ? 'rgba(255,255,255,0.9)' : '#3b82f6'
+                        }}>
+                          {String.fromCharCode(65 + index)}.
+                        </Box>
+                        {option}
+                      </Typography>
+                    </OptionCard>
                   ))}
                 </Box>
-              </Box>
 
-              <Box sx={{ mt: 4, textAlign: 'center' }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={handleNextQuestion}
-                  disabled={selectedAnswer === null}
-                  sx={{
-                    px: 6,
-                    py: 2,
-                    fontSize: '1.1rem',
-                    borderRadius: '50px',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    fontWeight: 'bold',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                    },
-                    '&:disabled': {
-                      background: '#ccc',
-                    },
-                  }}
-                >
-                  {currentQuestionIndex < quiz.questions.length - 1 ? 'Next Question →' : 'Finish Quiz ✓'}
-                </Button>
-              </Box>
+                <Box sx={{ mt: 4, textAlign: 'center' }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={handleNextQuestion}
+                    disabled={selectedAnswer === null}
+                    sx={{
+                      px: 6,
+                      py: 2,
+                      fontSize: '1.1rem',
+                      borderRadius: '50px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                      fontWeight: 'bold',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                        transform: 'translateY(-1px)'
+                      },
+                      '&:disabled': {
+                        background: '#9ca3af',
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {currentQuestionIndex < quiz.questions.length - 1 ? 'Next Question →' : 'Finish Quiz ✓'}
+                  </Button>
+                </Box>
+              </QuizCardContainer>
             </>
           )}
         </Container>
-      </Box>
-    </>
-  );
-}
+      </GradientBackground>
+    );
+  }
