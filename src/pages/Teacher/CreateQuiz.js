@@ -292,7 +292,7 @@ export default function CreateQuiz() {
 
       setSuccess(true);
       setTimeout(() => {
-        navigate('/teacher/dashboard');
+        navigate('/teacher/my-quizzes');
       }, 2000);
     } catch (err) {
       setError('Failed to create quiz: ' + err.message);
