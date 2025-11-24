@@ -16,7 +16,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Button
 } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -27,6 +28,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import Papa from 'papaparse';
 
 // Animations
 const fadeInUp = keyframes`
@@ -286,6 +288,31 @@ export default function QuizAnalytics() {
     });
   };
 
+  const exportToCSV = () => {
+    const csvData = scores.map(score => {
+      const student = students[score.studentId] || {};
+      const percentage = ((score.score / score.totalQuestions) * 100).toFixed(1);
+      return {
+        Student: student.name || 'Unknown',
+        Email: student.email || 'N/A',
+        Score: `${score.score}/${score.totalQuestions}`,
+        Percentage: `${percentage}%`,
+        CompletedAt: formatDate(score.completedAt),
+      };
+    });
+
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${quiz.title}-analytics.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <GradientBackground>
@@ -421,9 +448,25 @@ export default function QuizAnalytics() {
 
         {/* Student Attempts Table */}
         <StyledCard sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3 }}>
-            👥 Student Attempts
-          </Typography>
+           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 0 }}>
+              👥 Student Attempts
+            </Typography>
+            <Button variant="contained" onClick={exportToCSV} disabled={scores.length === 0} sx={{ 
+                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                color: 'white',
+                borderRadius: '12px',
+                fontWeight: '600',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 8px 16px rgba(59, 130, 246, 0.2)',
+                }
+              }}>
+              Export to CSV
+            </Button>
+          </Box>
+
 
           {scores.length === 0 ? (
             <EmptyStateBox>
