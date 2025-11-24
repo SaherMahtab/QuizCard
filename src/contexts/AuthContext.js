@@ -17,6 +17,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [userName, setUserName] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Signup function
@@ -45,23 +46,29 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   }
 
-  // Fetch user role from Firestore
-  async function fetchUserRole(uid) {
+  // Fetch user data from Firestore
+  async function fetchUserData(uid) {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
-      return userDoc.data().role;
+      const data = userDoc.data();
+      return {
+        role: data.role,
+        name: data.name
+      };
     }
-    return null;
+    return { role: null, name: null };
   }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        const role = await fetchUserRole(user.uid);
+        const { role, name } = await fetchUserData(user.uid);
         setUserRole(role);
+        setUserName(name);
       } else {
         setUserRole(null);
+        setUserName(null);
       }
       setLoading(false);
     });
@@ -72,6 +79,7 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     userRole,
+    userName,
     signup,
     login,
     logout

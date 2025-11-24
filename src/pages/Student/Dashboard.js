@@ -246,7 +246,7 @@ const StatsCard = styled(ActionCard)({
 });
 
 export default function StudentDashboard() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, userName, logout } = useAuth();
   const navigate = useNavigate();
 
   const [quizCode, setQuizCode] = useState('');
@@ -307,7 +307,7 @@ export default function StudentDashboard() {
                 mb: 2
               }}
             >
-              Welcome, Student! 🎓
+              Welcome, {userName || 'Student'}! 🎓
             </Typography>
             <Typography variant="h6" sx={{ color: '#666666', fontWeight: '500', mb: 3 }}>
               {currentUser?.email}

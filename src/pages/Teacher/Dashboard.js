@@ -17,6 +17,7 @@ import { styled, keyframes } from '@mui/material/styles';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import QuizIcon from '@mui/icons-material/Quiz';
 import PersonIcon from '@mui/icons-material/Person';
+import SchoolIcon from '@mui/icons-material/School';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Animations
@@ -149,7 +150,7 @@ const StatsCard = styled(Paper)({
 });
 
 export default function TeacherDashboard() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, userName, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -199,24 +200,26 @@ export default function TeacherDashboard() {
             >
               <PersonIcon sx={{ fontSize: 32 }} />
             </Avatar>
-            <Box>
-              <Typography variant="h4" gutterBottom sx={{ fontWeight: '700', color: '#000000' }}>
-                Welcome, Teacher! 👨‍🏫
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#666666' }}>
-                Email: {currentUser?.email}
-              </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box>
+                <Typography variant="h4" gutterBottom sx={{ fontWeight: '700', color: '#000000', display: 'flex', alignItems: 'center', gap: 1 }}>
+                  Welcome, {userName || 'Teacher'}! <SchoolIcon sx={{ fontSize: 32, color: '#3b82f6' }} />
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#666666' }}>
+                  Email: {currentUser?.email}
+                </Typography>
+              </Box>
             </Box>
           </Box>
         </WelcomeCard>
 
         {/* Quick Actions Section */}
-        <Typography variant="h5" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3 }}>
+        <Typography variant="h5" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3, textAlign: 'center' }}>
           Quick Actions
         </Typography>
         
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
+        <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center' }}>
+          <Grid item xs={12} sm={10} md={6} lg={5}>
             <ActionCard onClick={() => navigate('/teacher/create-quiz')}>
               <CardContent sx={{ p: 3, textAlign: 'center', transition: 'all 0.3s ease' }}>
                 <AddCircleOutlineIcon className="icon" sx={{ fontSize: 48, mb: 2, color: '#3b82f6', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
@@ -230,7 +233,7 @@ export default function TeacherDashboard() {
             </ActionCard>
           </Grid>
           
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={10} md={6} lg={5}>
             <ActionCard onClick={() => navigate('/teacher/my-quizzes')}>
               <CardContent sx={{ p: 3, textAlign: 'center', transition: 'all 0.3s ease' }}>
                 <QuizIcon className="icon" sx={{ fontSize: 48, mb: 2, color: '#1d4ed8', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
