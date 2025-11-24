@@ -14,12 +14,14 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
-import { styled, keyframes } from '@mui/material/styles';
+import { styled, keyframes, useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SchoolIcon from '@mui/icons-material/School';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import DarkModeToggle from '../../components/Common/DarkModeToggle';
 
 // Animations
 const fadeInUp = keyframes`
@@ -38,11 +40,23 @@ const pulse = keyframes`
   50% { transform: scale(1.05); }
 `;
 
-// Styled Components
-const GradientBackground = styled(Box)({
+const shimmer = keyframes`
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+`;
+
+// Styled Components with Dark Mode Support
+const GradientBackground = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
-  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+    : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
   position: 'relative',
+  transition: 'background 0.3s ease',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -50,54 +64,80 @@ const GradientBackground = styled(Box)({
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)',
+    background: theme.palette.mode === 'dark'
+      ? `radial-gradient(circle at 20% 80%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+         radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
+      : `radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+         radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)`,
     pointerEvents: 'none',
   }
-});
+}));
 
-const GlassAppBar = styled(AppBar)({
-  background: 'rgba(255, 255, 255, 0.95)',
+const GlassAppBar = styled(AppBar)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.8)'
+    : 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(20px)',
-  borderBottom: '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: '0 4px 20px rgba(59, 130, 246, 0.08)',
-});
+  borderBottom: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 4px 20px rgba(0, 0, 0, 0.5)'
+    : '0 4px 20px rgba(59, 130, 246, 0.08)',
+  transition: 'all 0.3s ease',
+}));
 
-const MainCard = styled(Paper)({
-  background: 'rgba(255, 255, 255, 0.98)',
+const MainCard = styled(Paper)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.98)',
   backdropFilter: 'blur(20px)',
   borderRadius: '20px',
-  border: '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: '0 10px 25px rgba(59, 130, 246, 0.1)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 10px 25px rgba(0, 0, 0, 0.5)'
+    : '0 10px 25px rgba(59, 130, 246, 0.1)',
   animation: `${fadeInUp} 0.8s ease-out`,
   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-});
+}));
 
-const QuestionCard = styled(Paper)({
-  background: 'rgba(255, 255, 255, 0.95)',
+const QuestionCard = styled(Paper)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.7)'
+    : 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(20px)',
   borderRadius: '16px',
-  border: '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: '0 8px 20px rgba(59, 130, 246, 0.08)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 20px rgba(0, 0, 0, 0.5)'
+    : '0 8px 20px rgba(59, 130, 246, 0.08)',
   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   animation: `${fadeInUp} 0.8s ease-out`,
   '&:hover': {
     transform: 'translateY(-2px)',
-    boxShadow: '0 12px 30px rgba(59, 130, 246, 0.15)',
-    border: '1px solid rgba(59, 130, 246, 0.2)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 12px 30px rgba(96, 165, 250, 0.3)'
+      : '0 12px 30px rgba(59, 130, 246, 0.15)',
   }
-});
+}));
 
-const LoadingContainer = styled(Box)({
+const LoadingContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
   height: '100vh',
-  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+    : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
   '& .MuiCircularProgress-root': {
     color: '#3b82f6',
     animation: `${pulse} 2s infinite`,
   }
-});
+}));
 
 const StyledButton = styled(Button)({
   borderRadius: '12px',
@@ -122,6 +162,7 @@ const StyledButton = styled(Button)({
     transform: 'translateY(-2px)',
     '&::before': {
       left: '100%',
+      animation: `${shimmer} 0.6s`,
     }
   }
 });
@@ -133,7 +174,6 @@ const PrimaryButton = styled(StyledButton)({
   '&:hover': {
     background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
     boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
-    transform: 'translateY(-2px)',
   },
   '&:disabled': {
     background: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)',
@@ -142,35 +182,53 @@ const PrimaryButton = styled(StyledButton)({
   }
 });
 
-const SecondaryButton = styled(StyledButton)({
-  border: '1px solid rgba(59, 130, 246, 0.3)',
-  color: '#1e40af',
-  background: 'rgba(59, 130, 246, 0.05)',
+const SecondaryButton = styled(StyledButton)(({ theme }) => ({
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.3)'
+    : '1px solid rgba(59, 130, 246, 0.3)',
+  color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(59, 130, 246, 0.1)'
+    : 'rgba(59, 130, 246, 0.05)',
   '&:hover': {
-    background: 'rgba(59, 130, 246, 0.1)',
-    border: '1px solid rgba(59, 130, 246, 0.5)',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.15)',
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(59, 130, 246, 0.2)'
+      : 'rgba(59, 130, 246, 0.1)',
+    borderColor: '#3b82f6',
+    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.2)',
   }
-});
+}));
 
-const StyledTextField = styled(TextField)({
+const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
     borderRadius: '12px',
-    background: 'rgba(255, 255, 255, 0.8)',
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(30, 41, 59, 0.6)'
+      : 'rgba(255, 255, 255, 0.8)',
     transition: 'all 0.3s ease',
     '&:hover': {
-      background: 'rgba(255, 255, 255, 0.9)',
+      background: theme.palette.mode === 'dark'
+        ? 'rgba(30, 41, 59, 0.8)'
+        : 'rgba(255, 255, 255, 0.9)',
     },
     '&.Mui-focused': {
-      background: 'rgba(255, 255, 255, 1)',
+      background: theme.palette.mode === 'dark'
+        ? 'rgba(30, 41, 59, 0.9)'
+        : 'rgba(255, 255, 255, 1)',
       '& fieldset': {
         borderColor: '#3b82f6',
         borderWidth: '2px',
       }
     }
+  },
+  '& .MuiInputLabel-root': {
+    color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
+    fontWeight: '500',
+  },
+  '& .MuiOutlinedInput-input': {
+    color: theme.palette.text.primary,
   }
-});
+}));
 
 const DeleteButton = styled(IconButton)({
   color: '#ef4444',
@@ -187,6 +245,7 @@ const DeleteButton = styled(IconButton)({
 export default function EditQuiz() {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -326,12 +385,16 @@ export default function EditQuiz() {
           <IconButton
             edge="start"
             onClick={() => navigate('/teacher/my-quizzes')}
-            sx={{ 
-              color: '#1e40af',
-              background: 'rgba(59, 130, 246, 0.1)',
+            sx={{
+              color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
+              background: theme.palette.mode === 'dark'
+                ? 'rgba(59, 130, 246, 0.15)'
+                : 'rgba(59, 130, 246, 0.1)',
               borderRadius: '12px',
               '&:hover': {
-                background: 'rgba(59, 130, 246, 0.2)',
+                background: theme.palette.mode === 'dark'
+                  ? 'rgba(59, 130, 246, 0.25)'
+                  : 'rgba(59, 130, 246, 0.2)',
                 transform: 'scale(1.1)',
               },
               transition: 'all 0.3s ease'
@@ -339,18 +402,20 @@ export default function EditQuiz() {
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: '#000000', fontWeight: '600', ml: 2 }}>
+          <SchoolIcon sx={{ mx: 2, color: theme.palette.primary.main, fontSize: 28 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
             Edit Quiz
           </Typography>
+          <DarkModeToggle />
         </Toolbar>
       </GlassAppBar>
 
       <Container maxWidth="md" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 2, 
+          <Alert
+            severity="error"
+            sx={{
+              mb: 2,
               borderRadius: '12px',
               background: 'rgba(239, 68, 68, 0.1)',
               border: '1px solid rgba(239, 68, 68, 0.2)'
@@ -360,10 +425,10 @@ export default function EditQuiz() {
           </Alert>
         )}
         {success && (
-          <Alert 
-            severity="success" 
-            sx={{ 
-              mb: 2, 
+          <Alert
+            severity="success"
+            sx={{
+              mb: 2,
               borderRadius: '12px',
               background: 'rgba(34, 197, 94, 0.1)',
               border: '1px solid rgba(34, 197, 94, 0.2)'
@@ -376,7 +441,7 @@ export default function EditQuiz() {
         <MainCard sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             {/* Quiz Details */}
-            <Typography variant="h5" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
               Quiz Details
             </Typography>
 
@@ -408,17 +473,17 @@ export default function EditQuiz() {
               inputProps={{ min: 5, max: 60 }}
             />
 
-            <Divider sx={{ my: 4, background: 'rgba(59, 130, 246, 0.1)' }} />
+            <Divider sx={{ my: 4, background: theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.1)' }} />
 
             {/* Questions */}
-            <Typography variant="h5" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
               Questions
             </Typography>
 
             {quizData.questions.map((question, qIndex) => (
               <QuestionCard key={qIndex} sx={{ p: 3, mt: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" sx={{ color: '#000000', fontWeight: '600' }}>
+                  <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
                     Question {qIndex + 1}
                   </Typography>
                   {quizData.questions.length > 1 && (
@@ -439,13 +504,13 @@ export default function EditQuiz() {
                   sx={{ mt: 2 }}
                 />
 
-                <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, color: '#000000', fontWeight: '600' }}>
+                <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
                   Options:
                 </Typography>
 
                 {question.options.map((option, optIndex) => (
                   <Box key={optIndex} sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                    <Typography sx={{ mr: 2, minWidth: 80, color: '#666666' }}>
+                    <Typography sx={{ mr: 2, minWidth: 80, color: theme.palette.text.secondary }}>
                       Option {optIndex + 1}:
                     </Typography>
                     <StyledTextField
@@ -459,7 +524,7 @@ export default function EditQuiz() {
                       variant={question.correctAnswer === optIndex ? 'contained' : 'outlined'}
                       color="success"
                       size="small"
-                      sx={{ 
+                      sx={{
                         ml: 2,
                         borderRadius: '12px',
                         textTransform: 'none',

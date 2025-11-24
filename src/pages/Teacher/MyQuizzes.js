@@ -14,9 +14,11 @@ import {
   CardActions,
   Grid,
   Chip,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material';
-import { styled, keyframes } from '@mui/material/styles';
+import { styled, keyframes, useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import QuizIcon from '@mui/icons-material/Quiz';
 import AddIcon from '@mui/icons-material/Add';
@@ -24,10 +26,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Snackbar, Alert } from '@mui/material';
+import SchoolIcon from '@mui/icons-material/School';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import DarkModeToggle from '../../components/Common/DarkModeToggle';
 
 // Animations
 const fadeInUp = keyframes`
@@ -51,11 +54,14 @@ const float = keyframes`
   50% { transform: translateY(-10px); }
 `;
 
-// Styled Components
-const GradientBackground = styled(Box)({
+// Styled Components with Dark Mode Support
+const GradientBackground = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
-  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+    : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
   position: 'relative',
+  transition: 'background 0.3s ease',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -63,17 +69,28 @@ const GradientBackground = styled(Box)({
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)',
+    background: theme.palette.mode === 'dark'
+      ? `radial-gradient(circle at 20% 80%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+         radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
+      : `radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+         radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)`,
     pointerEvents: 'none',
   }
-});
+}));
 
-const GlassAppBar = styled(AppBar)({
-  background: 'rgba(255, 255, 255, 0.95)',
+const GlassAppBar = styled(AppBar)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.8)'
+    : 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(20px)',
-  borderBottom: '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: '0 4px 20px rgba(59, 130, 246, 0.08)',
-});
+  borderBottom: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 4px 20px rgba(0, 0, 0, 0.5)'
+    : '0 4px 20px rgba(59, 130, 246, 0.08)',
+  transition: 'all 0.3s ease',
+}));
 
 const LoadingContainer = styled(Box)({
   display: 'flex',
@@ -86,23 +103,35 @@ const LoadingContainer = styled(Box)({
   }
 });
 
-const EmptyStateCard = styled(Paper)({
-  background: 'rgba(255, 255, 255, 0.98)',
+const EmptyStateCard = styled(Paper)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.98)',
   backdropFilter: 'blur(20px)',
   borderRadius: '20px',
-  border: '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: '0 10px 25px rgba(59, 130, 246, 0.1)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 10px 25px rgba(0, 0, 0, 0.5)'
+    : '0 10px 25px rgba(59, 130, 246, 0.1)',
   padding: '48px',
   textAlign: 'center',
   animation: `${fadeInUp} 0.8s ease-out`,
-});
+}));
 
-const QuizCard = styled(Card)({
-  background: 'rgba(255, 255, 255, 0.95)',
+const QuizCard = styled(Card)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(20px)',
   borderRadius: '20px',
-  border: '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: '0 8px 20px rgba(59, 130, 246, 0.08)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 20px rgba(0, 0, 0, 0.5)'
+    : '0 8px 20px rgba(59, 130, 246, 0.08)',
   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   animation: `${fadeInUp} 0.8s ease-out`,
   position: 'relative',
@@ -114,14 +143,17 @@ const QuizCard = styled(Card)({
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(96, 165, 250, 0.03) 100%)',
+    background: theme.palette.mode === 'dark'
+      ? 'linear-gradient(135deg, rgba(96, 165, 250, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)'
+      : 'linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(96, 165, 250, 0.03) 100%)',
     opacity: 0,
     transition: 'opacity 0.4s ease',
   },
   '&:hover': {
     transform: 'translateY(-8px) scale(1.02)',
-    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.2)',
-    border: '1px solid rgba(59, 130, 246, 0.3)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 20px 40px rgba(96, 165, 250, 0.3)'
+      : '0 20px 40px rgba(59, 130, 246, 0.2)',
     '&::before': {
       opacity: 1,
     },
@@ -129,20 +161,26 @@ const QuizCard = styled(Card)({
       animation: `${float} 2s infinite`,
     }
   }
-});
+}));
 
-const QuizCodeBox = styled(Box)({
-  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(96, 165, 250, 0.1) 100%)',
-  border: '1px solid rgba(59, 130, 246, 0.2)',
+const QuizCodeBox = styled(Box)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)'
+    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(96, 165, 250, 0.1) 100%)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.3)'
+    : '1px solid rgba(59, 130, 246, 0.2)',
   borderRadius: '12px',
   padding: '8px 16px',
   marginTop: '16px',
   transition: 'all 0.3s ease',
   '&:hover': {
-    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%)',
+    background: theme.palette.mode === 'dark'
+      ? 'linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)'
+      : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%)',
     transform: 'scale(1.02)',
   }
-});
+}));
 
 const ActionButton = styled(Button)({
   borderRadius: '12px',
@@ -156,16 +194,18 @@ const ActionButton = styled(Button)({
   }
 });
 
-const PrimaryButton = styled(ActionButton)({
-  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-  color: 'white',
-  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.25)',
+const PrimaryButton = styled(ActionButton)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(59, 130, 246, 0.2)'
+    : 'rgba(59, 130, 246, 0.1)',
+  color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
   '&:hover': {
-    background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
-    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
-    transform: 'translateY(-2px)',
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(59, 130, 246, 0.3)'
+      : 'rgba(59, 130, 246, 0.2)',
+    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
   }
-});
+}));
 
 const EditButton = styled(ActionButton)({
   color: '#059669',
@@ -173,7 +213,6 @@ const EditButton = styled(ActionButton)({
   border: '1px solid rgba(5, 150, 105, 0.2)',
   '&:hover': {
     background: 'rgba(5, 150, 105, 0.2)',
-    transform: 'translateY(-2px)',
     boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
   }
 });
@@ -184,7 +223,6 @@ const AnalyticsButton = styled(ActionButton)({
   border: '1px solid rgba(124, 58, 237, 0.2)',
   '&:hover': {
     background: 'rgba(124, 58, 237, 0.2)',
-    transform: 'translateY(-2px)',
     boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
   }
 });
@@ -195,7 +233,6 @@ const DeleteButton = styled(ActionButton)({
   border: '1px solid rgba(239, 68, 68, 0.2)',
   '&:hover': {
     background: 'rgba(239, 68, 68, 0.2)',
-    transform: 'translateY(-2px)',
     boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
   },
   '&:disabled': {
@@ -217,6 +254,7 @@ const StyledChip = styled(Chip)({
 export default function MyQuizzes() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const theme = useTheme();
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(null);
@@ -257,7 +295,6 @@ export default function MyQuizzes() {
       setDeleteLoading(quizId);
       await deleteDoc(doc(db, 'quizzes', quizId));
 
-      // Remove from local state
       setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
       setDeleteLoading(null);
       alert('Quiz deleted successfully!');
@@ -275,12 +312,16 @@ export default function MyQuizzes() {
           <IconButton
             edge="start"
             onClick={() => navigate('/teacher/dashboard')}
-            sx={{ 
-              color: '#1e40af',
-              background: 'rgba(59, 130, 246, 0.1)',
+            sx={{
+              color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
+              background: theme.palette.mode === 'dark'
+                ? 'rgba(59, 130, 246, 0.15)'
+                : 'rgba(59, 130, 246, 0.1)',
               borderRadius: '12px',
               '&:hover': {
-                background: 'rgba(59, 130, 246, 0.2)',
+                background: theme.palette.mode === 'dark'
+                  ? 'rgba(59, 130, 246, 0.25)'
+                  : 'rgba(59, 130, 246, 0.2)',
                 transform: 'scale(1.1)',
               },
               transition: 'all 0.3s ease'
@@ -288,20 +329,14 @@ export default function MyQuizzes() {
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: '#000000', fontWeight: '600', ml: 2 }}>
+          <SchoolIcon sx={{ mx: 2, color: theme.palette.primary.main, fontSize: 28 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
             My Quizzes
           </Typography>
-          <PrimaryButton 
+          <DarkModeToggle />
+          <PrimaryButton
             startIcon={<AddIcon />}
             onClick={() => navigate('/teacher/create-quiz')}
-            sx={{ 
-              background: 'rgba(59, 130, 246, 0.1)',
-              color: '#1e40af',
-              '&:hover': {
-                background: 'rgba(59, 130, 246, 0.2)',
-                color: '#1e40af'
-              }
-            }}
           >
             Create New
           </PrimaryButton>
@@ -316,15 +351,22 @@ export default function MyQuizzes() {
         ) : quizzes.length === 0 ? (
           <EmptyStateCard>
             <QuizIcon sx={{ fontSize: 64, color: '#3b82f6', mb: 2, animation: `${float} 3s infinite` }} />
-            <Typography variant="h5" gutterBottom sx={{ color: '#000000', fontWeight: '600' }}>
+            <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
               No quizzes created yet
             </Typography>
-            <Typography variant="body1" sx={{ color: '#666666', mb: 3 }}>
+            <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
               Create your first quiz to get started with engaging your students
             </Typography>
             <PrimaryButton
               startIcon={<AddIcon />}
               onClick={() => navigate('/teacher/create-quiz')}
+              sx={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                color: 'white',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                }
+              }}
             >
               Create Your First Quiz
             </PrimaryButton>
@@ -337,29 +379,29 @@ export default function MyQuizzes() {
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <QuizIcon className="quiz-icon" sx={{ fontSize: 32, color: '#3b82f6', mr: 1.5 }} />
-                      <Typography variant="h6" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 0 }}>
+                      <Typography variant="h6" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 0 }}>
                         {quiz.title}
                       </Typography>
                     </Box>
-                    
+
                     <StyledChip
                       label={quiz.subject}
                       size="small"
                       sx={{ mb: 2 }}
                     />
-                    
+
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" sx={{ color: '#666666' }}>
+                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                         {quiz.questions.length} Questions
                       </Typography>
-                      <Typography variant="body2" sx={{ color: '#666666' }}>
+                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                         {quiz.timePerQuestion}s each
                       </Typography>
                     </Box>
-                    
+
                     <QuizCodeBox>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography variant="body2" sx={{ color: '#000000', fontWeight: '600' }}>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
                           Quiz Code: {quiz.quizCode}
                         </Typography>
                         <IconButton
@@ -380,7 +422,7 @@ export default function MyQuizzes() {
                       </Box>
                     </QuizCodeBox>
                   </CardContent>
-                  
+
                   <CardActions sx={{ p: 2, pt: 0, gap: 1, flexWrap: 'wrap' }}>
                     <EditButton
                       size="small"
@@ -412,22 +454,22 @@ export default function MyQuizzes() {
         )}
       </Container>
       <Snackbar
-              open={copySnackbar}
-              autoHideDuration={2000}
-              onClose={() => setCopySnackbar(false)}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-              <Alert
-                onClose={() => setCopySnackbar(false)}
-                severity="success"
-                sx={{
-                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  color: 'white',
-                  fontWeight: '600'
-                }}
-              >
-                Quiz code copied to clipboard!
-              </Alert>
+        open={copySnackbar}
+        autoHideDuration={2000}
+        onClose={() => setCopySnackbar(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setCopySnackbar(false)}
+          severity="success"
+          sx={{
+            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+            color: 'white',
+            fontWeight: '600'
+          }}
+        >
+          Quiz code copied to clipboard!
+        </Alert>
       </Snackbar>
     </GradientBackground>
   );
