@@ -11,7 +11,7 @@ import {
   Grid,
   Card
 } from '@mui/material';
-import { styled, keyframes } from '@mui/material/styles';
+import { styled, keyframes, useTheme } from '@mui/material/styles';
 import {
   School as SchoolIcon,
   Quiz as QuizIcon,
@@ -21,6 +21,7 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import DarkModeToggle from '../../components/Common/DarkModeToggle';
 
 // Animations
 const fadeInUp = keyframes`
@@ -52,11 +53,14 @@ const shimmer = keyframes`
   }
 `;
 
-// Styled Components
-const GradientBackground = styled(Box)({
+// Styled Components with Theme Support
+const GradientBackground = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
-  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+    : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
   position: 'relative',
+  transition: 'background 0.3s ease',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -64,42 +68,63 @@ const GradientBackground = styled(Box)({
     left: 0,
     right: 0,
     bottom: 0,
-    background: `
-      radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)
-    `,
+    background: theme.palette.mode === 'dark'
+      ? `radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+         radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
+      : `radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+         radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)`,
     pointerEvents: 'none',
   }
-});
+}));
 
-const GlassAppBar = styled(AppBar)({
-  background: 'rgba(255, 255, 255, 0.25)',
+const GlassAppBar = styled(AppBar)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.8)'
+    : 'rgba(255, 255, 255, 0.25)',
   backdropFilter: 'blur(20px)',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-});
+  borderBottom: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.3s ease',
+}));
 
-const StyledCard = styled(Card)({
-  background: 'rgba(255, 255, 255, 0.25)',
+const StyledCard = styled(Card)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.25)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
   borderRadius: '20px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
   animation: `${fadeInUp} 0.6s ease-out`,
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
     transform: 'translateY(-8px)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 20px 40px rgba(0, 0, 0, 0.7)'
+      : '0 20px 40px rgba(0, 0, 0, 0.15)',
   }
-});
+}));
 
-const ActionCard = styled(Card)({
-  background: 'rgba(255, 255, 255, 0.3)',
+const ActionCard = styled(Card)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.7)'
+    : 'rgba(255, 255, 255, 0.3)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
   borderRadius: '16px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
   animation: `${fadeInUp} 0.6s ease-out`,
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   cursor: 'pointer',
@@ -107,7 +132,9 @@ const ActionCard = styled(Card)({
   overflow: 'hidden',
   '&:hover': {
     transform: 'translateY(-5px) scale(1.02)',
-    boxShadow: '0 15px 35px rgba(59, 130, 246, 0.2)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 15px 35px rgba(96, 165, 250, 0.3)'
+      : '0 15px 35px rgba(59, 130, 246, 0.2)',
     '&::before': {
       opacity: 1,
     }
@@ -119,27 +146,40 @@ const ActionCard = styled(Card)({
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)',
+    background: theme.palette.mode === 'dark'
+      ? 'linear-gradient(135deg, rgba(96, 165, 250, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)'
+      : 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)',
     opacity: 0,
     transition: 'opacity 0.3s ease',
     pointerEvents: 'none',
   }
-});
+}));
 
-const StyledTextField = styled(TextField)({
+const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
-    background: 'rgba(255, 255, 255, 0.4)',
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(30, 41, 59, 0.6)'
+      : 'rgba(255, 255, 255, 0.4)',
     backdropFilter: 'blur(10px)',
     borderRadius: '12px',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
+    border: theme.palette.mode === 'dark'
+      ? '1px solid rgba(96, 165, 250, 0.3)'
+      : '1px solid rgba(255, 255, 255, 0.3)',
+    transition: 'all 0.3s ease',
     '&:hover': {
-      background: 'rgba(255, 255, 255, 0.5)',
+      background: theme.palette.mode === 'dark'
+        ? 'rgba(30, 41, 59, 0.8)'
+        : 'rgba(255, 255, 255, 0.5)',
       '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: 'rgba(59, 130, 246, 0.5)',
+        borderColor: theme.palette.mode === 'dark'
+          ? 'rgba(96, 165, 250, 0.5)'
+          : 'rgba(59, 130, 246, 0.5)',
       }
     },
     '&.Mui-focused': {
-      background: 'rgba(255, 255, 255, 0.6)',
+      background: theme.palette.mode === 'dark'
+        ? 'rgba(30, 41, 59, 0.9)'
+        : 'rgba(255, 255, 255, 0.6)',
       '& .MuiOutlinedInput-notchedOutline': {
         borderColor: '#3b82f6',
         borderWidth: '2px',
@@ -150,19 +190,19 @@ const StyledTextField = styled(TextField)({
     }
   },
   '& .MuiInputLabel-root': {
-    color: '#1e40af',
+    color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
     fontWeight: '500',
     '&.Mui-focused': {
-      color: '#1d4ed8',
+      color: theme.palette.mode === 'dark' ? '#60a5fa' : '#1d4ed8',
     }
   },
   '& .MuiOutlinedInput-input': {
-    color: '#000000',
+    color: theme.palette.text.primary,
     fontWeight: '500',
   }
-});
+}));
 
-const PrimaryButton = styled(Button)({
+const PrimaryButton = styled(Button)(({ theme }) => ({
   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
   borderRadius: '12px',
   padding: '12px 24px',
@@ -206,20 +246,26 @@ const PrimaryButton = styled(Button)({
     left: '100%',
     animation: `${shimmer} 0.5s`,
   }
-});
+}));
 
-const SecondaryButton = styled(Button)({
-  background: 'rgba(255, 255, 255, 0.4)',
+const SecondaryButton = styled(Button)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.4)',
   backdropFilter: 'blur(10px)',
   borderRadius: '12px',
   padding: '12px 24px',
-  color: '#1e40af',
+  color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
   fontWeight: '600',
   textTransform: 'none',
-  border: '1px solid rgba(59, 130, 246, 0.3)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.3)'
+    : '1px solid rgba(59, 130, 246, 0.3)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
-    background: 'rgba(59, 130, 246, 0.1)',
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(59, 130, 246, 0.2)'
+      : 'rgba(59, 130, 246, 0.1)',
     borderColor: '#3b82f6',
     transform: 'translateY(-2px)',
     boxShadow: '0 8px 25px rgba(59, 130, 246, 0.2)',
@@ -229,7 +275,7 @@ const SecondaryButton = styled(Button)({
     color: 'rgba(107, 114, 128, 0.7)',
     borderColor: 'rgba(156, 163, 175, 0.3)',
   }
-});
+}));
 
 const WelcomeSection = styled(Box)({
   textAlign: 'center',
@@ -237,17 +283,20 @@ const WelcomeSection = styled(Box)({
   animation: `${fadeInUp} 0.8s ease-out`,
 });
 
-const StatsCard = styled(ActionCard)({
+const StatsCard = styled(ActionCard)(({ theme }) => ({
   textAlign: 'center',
-  background: 'rgba(255, 255, 255, 0.2)',
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.5)'
+    : 'rgba(255, 255, 255, 0.2)',
   '&:hover': {
     animation: `${pulse} 1s ease-in-out infinite`,
   }
-});
+}));
 
 export default function StudentDashboard() {
   const { currentUser, userName, logout } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const [quizCode, setQuizCode] = useState('');
   const [leaderboardCode, setLeaderboardCode] = useState('');
@@ -277,11 +326,12 @@ export default function StudentDashboard() {
     <GradientBackground>
       <GlassAppBar position="static" elevation={0}>
         <Toolbar>
-          <SchoolIcon sx={{ mr: 2, color: '#1e40af', fontSize: 28 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#000000', fontWeight: '600' }}>
+          <SchoolIcon sx={{ mr: 2, color: theme.palette.primary.main, fontSize: 28 }} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
             QuizCard - Student Portal
           </Typography>
-          <SecondaryButton 
+          <DarkModeToggle />
+          <SecondaryButton
             startIcon={<LogoutIcon />}
             onClick={handleLogout}
             size="small"
@@ -295,10 +345,10 @@ export default function StudentDashboard() {
         {/* Welcome Section */}
         <WelcomeSection>
           <StyledCard sx={{ p: 4, mb: 4 }}>
-            <Typography 
-              variant="h3" 
-              gutterBottom 
-              sx={{ 
+            <Typography
+              variant="h3"
+              gutterBottom
+              sx={{
                 fontWeight: '700',
                 background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
                 backgroundClip: 'text',
@@ -309,10 +359,10 @@ export default function StudentDashboard() {
             >
               Welcome, {userName || 'Student'}! 🎓
             </Typography>
-            <Typography variant="h6" sx={{ color: '#666666', fontWeight: '500', mb: 3 }}>
+            <Typography variant="h6" sx={{ color: theme.palette.text.secondary, fontWeight: '500', mb: 3 }}>
               {currentUser?.email}
             </Typography>
-            
+
             {/* Quiz Code Input Section */}
             <Box sx={{ display: 'flex', gap: 2, maxWidth: '600px', mx: 'auto', alignItems: 'stretch' }}>
               <StyledTextField
@@ -342,16 +392,14 @@ export default function StudentDashboard() {
         {/* Action Cards */}
         <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center' }}>
           <Grid item xs={12} sm={10} md={6} lg={5}>
-            <ActionCard 
-              sx={{ p: 3, height: '100%', animationDelay: '0.2s' }}
-            >
+            <ActionCard sx={{ p: 3, height: '100%', animationDelay: '0.2s' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <LeaderboardIcon sx={{ fontSize: 40, color: '#3b82f6', mr: 2 }} />
-                <Typography variant="h6" sx={{ color: '#000000', fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
                   View Leaderboard
                 </Typography>
               </Box>
-              <Typography variant="body2" sx={{ color: '#666666', mb: 2 }}>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
                 Check your ranking and compete with other students
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
@@ -377,17 +425,17 @@ export default function StudentDashboard() {
           </Grid>
 
           <Grid item xs={12} sm={10} md={6} lg={5}>
-            <ActionCard 
+            <ActionCard
               sx={{ p: 3, height: '100%', animationDelay: '0.3s' }}
               onClick={() => navigate('/student/score-history')}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <TrendingUpIcon sx={{ fontSize: 40, color: '#059669', mr: 2 }} />
-                <Typography variant="h6" sx={{ color: '#000000', fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
                   Score History
                 </Typography>
               </Box>
-              <Typography variant="body2" sx={{ color: '#666666', mb: 2 }}>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
                 Track your progress and view past quiz results
               </Typography>
               <SecondaryButton
@@ -402,17 +450,17 @@ export default function StudentDashboard() {
 
         {/* Coming Soon Features */}
         <StyledCard sx={{ p: 4, animationDelay: '0.5s' }}>
-          <Typography variant="h6" gutterBottom sx={{ color: '#000000', fontWeight: '600', mb: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
             🚀 Coming Soon
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <StatsCard sx={{ p: 3, animationDelay: '0.6s' }}>
                 <SchoolIcon sx={{ fontSize: 40, color: '#7c3aed', mb: 2 }} />
-                <Typography variant="body1" sx={{ color: '#000000', fontWeight: '600', mb: 1 }}>
+                <Typography variant="body1" sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 1 }}>
                   Browse Quizzes
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#666666' }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   Discover available quizzes by subject
                 </Typography>
               </StatsCard>
@@ -420,10 +468,10 @@ export default function StudentDashboard() {
             <Grid item xs={12} md={4}>
               <StatsCard sx={{ p: 3, animationDelay: '0.7s' }}>
                 <TrendingUpIcon sx={{ fontSize: 40, color: '#059669', mb: 2 }} />
-                <Typography variant="body1" sx={{ color: '#000000', fontWeight: '600', mb: 1 }}>
+                <Typography variant="body1" sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 1 }}>
                   Progress Tracking
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#666666' }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   Detailed analytics and insights
                 </Typography>
               </StatsCard>
@@ -431,10 +479,10 @@ export default function StudentDashboard() {
             <Grid item xs={12} md={4}>
               <StatsCard sx={{ p: 3, animationDelay: '0.8s' }}>
                 <LeaderboardIcon sx={{ fontSize: 40, color: '#ef4444', mb: 2 }} />
-                <Typography variant="body1" sx={{ color: '#000000', fontWeight: '600', mb: 1 }}>
+                <Typography variant="body1" sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 1 }}>
                   Global Rankings
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#666666' }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   Compete with students worldwide
                 </Typography>
               </StatsCard>

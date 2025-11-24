@@ -15,7 +15,7 @@ import {
   CircularProgress,
   Divider
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import {
   ArrowBack as ArrowBackIcon,
   Analytics as AnalyticsIcon,
@@ -27,12 +27,16 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import DarkModeToggle from '../../components/Common/DarkModeToggle';
 
-// Styled Components
-const GradientBackground = styled(Box)({
+// Styled Components with Dark Mode Support
+const GradientBackground = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
-  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+    : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
   position: 'relative',
+  transition: 'background 0.3s ease',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -40,62 +44,93 @@ const GradientBackground = styled(Box)({
     left: 0,
     right: 0,
     bottom: 0,
-    background: `
-      radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)
-    `,
+    background: theme.palette.mode === 'dark'
+      ? `radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+         radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
+      : `radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+         radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)`,
     pointerEvents: 'none',
   }
-});
+}));
 
-const GlassAppBar = styled(AppBar)({
-  background: 'rgba(255, 255, 255, 0.25)',
+const GlassAppBar = styled(AppBar)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.8)'
+    : 'rgba(255, 255, 255, 0.25)',
   backdropFilter: 'blur(20px)',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-});
+  borderBottom: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.3s ease',
+}));
 
-const StyledCard = styled(Paper)({
-  background: 'rgba(255, 255, 255, 0.25)',
+const StyledCard = styled(Paper)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.25)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
   borderRadius: '20px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
     transform: 'translateY(-5px)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 20px 40px rgba(0, 0, 0, 0.7)'
+      : '0 20px 40px rgba(0, 0, 0, 0.15)',
   }
-});
+}));
 
-const StatCard = styled(Box)({
+const StatCard = styled(Box)(({ theme }) => ({
   textAlign: 'center',
   padding: '1.5rem',
   borderRadius: '16px',
-  background: 'rgba(255, 255, 255, 0.3)',
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(51, 65, 85, 0.5)'
+    : 'rgba(255, 255, 255, 0.3)',
   backdropFilter: 'blur(10px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
   transition: 'all 0.3s ease',
   '&:hover': {
     transform: 'translateY(-3px)',
-    background: 'rgba(255, 255, 255, 0.4)',
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(51, 65, 85, 0.7)'
+      : 'rgba(255, 255, 255, 0.4)',
   }
-});
+}));
 
-const ScoreCard = styled(Card)({
-  background: 'rgba(255, 255, 255, 0.3)',
+const ScoreCard = styled(Card)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.5)'
+    : 'rgba(255, 255, 255, 0.3)',
   backdropFilter: 'blur(15px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
   borderRadius: '16px',
-  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 25px rgba(0, 0, 0, 0.5)'
+    : '0 8px 25px rgba(0, 0, 0, 0.1)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
     transform: 'translateY(-3px)',
-    boxShadow: '0 12px 35px rgba(0, 0, 0, 0.15)',
-    background: 'rgba(255, 255, 255, 0.4)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 12px 35px rgba(0, 0, 0, 0.7)'
+      : '0 12px 35px rgba(0, 0, 0, 0.15)',
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(30, 41, 59, 0.7)'
+      : 'rgba(255, 255, 255, 0.4)',
   }
-});
+}));
 
 const LoadingContainer = styled(Box)({
   display: 'flex',
@@ -114,8 +149,8 @@ const QuestionChip = styled(Chip)(({ correct }) => ({
   height: '35px',
   fontSize: '0.875rem',
   fontWeight: '600',
-  background: correct ? 
-    'linear-gradient(135deg, #059669 0%, #047857 100%)' : 
+  background: correct ?
+    'linear-gradient(135deg, #059669 0%, #047857 100%)' :
     'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
   color: 'white',
   border: correct ? '2px solid rgba(5, 150, 105, 0.3)' : '2px solid rgba(239, 68, 68, 0.3)',
@@ -128,6 +163,7 @@ const QuestionChip = styled(Chip)(({ correct }) => ({
 export default function ScoreHistory() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const theme = useTheme();
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -147,10 +183,9 @@ export default function ScoreHistory() {
       querySnapshot.forEach((doc) => {
         scoresData.push({ id: doc.id, ...doc.data() });
       });
-      
-      // Sort manually by completedAt
+
       scoresData.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-      
+
       setScores(scoresData);
       setLoading(false);
     } catch (error) {
@@ -204,12 +239,16 @@ export default function ScoreHistory() {
           <IconButton
             edge="start"
             onClick={() => navigate('/student/dashboard')}
-            sx={{ 
-              color: '#1e40af',
-              background: 'rgba(59, 130, 246, 0.1)',
+            sx={{
+              color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
+              background: theme.palette.mode === 'dark'
+                ? 'rgba(59, 130, 246, 0.15)'
+                : 'rgba(59, 130, 246, 0.1)',
               borderRadius: '12px',
               '&:hover': {
-                background: 'rgba(59, 130, 246, 0.2)',
+                background: theme.palette.mode === 'dark'
+                  ? 'rgba(59, 130, 246, 0.25)'
+                  : 'rgba(59, 130, 246, 0.2)',
                 transform: 'scale(1.1)',
               },
               transition: 'all 0.3s ease'
@@ -217,10 +256,11 @@ export default function ScoreHistory() {
           >
             <ArrowBackIcon />
           </IconButton>
-          <AnalyticsIcon sx={{ mx: 2, color: '#3b82f6', fontSize: 28 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, color: '#000000', fontWeight: '600' }}>
+          <AnalyticsIcon sx={{ mx: 2, color: theme.palette.primary.main, fontSize: 28 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
             My Score History
           </Typography>
+          <DarkModeToggle />
         </Toolbar>
       </GlassAppBar>
 
@@ -229,18 +269,18 @@ export default function ScoreHistory() {
         {scores.length > 0 && (
           <StyledCard sx={{ p: 4, mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <TrendingUpIcon sx={{ fontSize: 32, color: '#3b82f6', mr: 2 }} />
-              <Typography variant="h5" sx={{ color: '#000000', fontWeight: '600' }}>
+              <TrendingUpIcon sx={{ fontSize: 32, color: theme.palette.primary.main, mr: 2 }} />
+              <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
                 Overall Statistics
               </Typography>
             </Box>
             <Grid container spacing={3}>
               <Grid item xs={6} sm={3}>
                 <StatCard>
-                  <SchoolIcon sx={{ fontSize: 40, color: '#3b82f6', mb: 1 }} />
-                  <Typography 
-                    variant="h3" 
-                    sx={{ 
+                  <SchoolIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
+                  <Typography
+                    variant="h3"
+                    sx={{
                       fontWeight: '700',
                       background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                       backgroundClip: 'text',
@@ -251,7 +291,7 @@ export default function ScoreHistory() {
                   >
                     {stats.totalQuizzes}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666666', fontWeight: '500' }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: '500' }}>
                     Quizzes Taken
                   </Typography>
                 </StatCard>
@@ -259,9 +299,9 @@ export default function ScoreHistory() {
               <Grid item xs={6} sm={3}>
                 <StatCard>
                   <TrendingUpIcon sx={{ fontSize: 40, color: '#059669', mb: 1 }} />
-                  <Typography 
-                    variant="h3" 
-                    sx={{ 
+                  <Typography
+                    variant="h3"
+                    sx={{
                       fontWeight: '700',
                       background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                       backgroundClip: 'text',
@@ -272,7 +312,7 @@ export default function ScoreHistory() {
                   >
                     {stats.avgScore}%
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666666', fontWeight: '500' }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: '500' }}>
                     Average Score
                   </Typography>
                 </StatCard>
@@ -280,9 +320,9 @@ export default function ScoreHistory() {
               <Grid item xs={6} sm={3}>
                 <StatCard>
                   <CheckCircleIcon sx={{ fontSize: 40, color: '#7c3aed', mb: 1 }} />
-                  <Typography 
-                    variant="h3" 
-                    sx={{ 
+                  <Typography
+                    variant="h3"
+                    sx={{
                       fontWeight: '700',
                       background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)',
                       backgroundClip: 'text',
@@ -293,7 +333,7 @@ export default function ScoreHistory() {
                   >
                     {stats.totalCorrect}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666666', fontWeight: '500' }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: '500' }}>
                     Correct Answers
                   </Typography>
                 </StatCard>
@@ -301,9 +341,9 @@ export default function ScoreHistory() {
               <Grid item xs={6} sm={3}>
                 <StatCard>
                   <QuizIcon sx={{ fontSize: 40, color: '#ef4444', mb: 1 }} />
-                  <Typography 
-                    variant="h3" 
-                    sx={{ 
+                  <Typography
+                    variant="h3"
+                    sx={{
                       fontWeight: '700',
                       background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                       backgroundClip: 'text',
@@ -314,7 +354,7 @@ export default function ScoreHistory() {
                   >
                     {stats.totalQuestions}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666666', fontWeight: '500' }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: '500' }}>
                     Total Questions
                   </Typography>
                 </StatCard>
@@ -327,17 +367,17 @@ export default function ScoreHistory() {
         {scores.length === 0 ? (
           <EmptyStateCard>
             <QuizIcon sx={{ fontSize: 80, color: '#cbd5e1', mb: 2 }} />
-            <Typography variant="h5" sx={{ color: '#000000', fontWeight: '600', mb: 2 }}>
+            <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 2 }}>
               No quiz attempts yet
             </Typography>
-            <Typography variant="body1" sx={{ color: '#666666', mb: 3 }}>
+            <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
               Start playing quizzes to see your score history!
             </Typography>
-            <Box sx={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              px: 3, 
-              py: 1.5, 
+            <Box sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              px: 3,
+              py: 1.5,
               background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
               borderRadius: '12px',
               color: 'white'
@@ -358,10 +398,10 @@ export default function ScoreHistory() {
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                         <Box sx={{ flex: 1 }}>
-                          <Typography variant="h6" sx={{ color: '#000000', fontWeight: '600', mb: 1 }}>
+                          <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 1 }}>
                             📚 {scoreRecord.quizTitle}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: '#666666', fontWeight: '500' }}>
+                          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: '500' }}>
                             🗓️ Completed: {formatDate(scoreRecord.completedAt)}
                           </Typography>
                         </Box>
@@ -381,12 +421,17 @@ export default function ScoreHistory() {
                         />
                       </Box>
 
-                      <Divider sx={{ my: 2, background: 'rgba(156, 163, 175, 0.3)' }} />
+                      <Divider sx={{
+                        my: 2,
+                        background: theme.palette.mode === 'dark'
+                          ? 'rgba(96, 165, 250, 0.2)'
+                          : 'rgba(156, 163, 175, 0.3)'
+                      }} />
 
                       <Box sx={{ mb: 3 }}>
-                        <Typography 
-                          variant="h4" 
-                          sx={{ 
+                        <Typography
+                          variant="h4"
+                          sx={{
                             fontWeight: '700',
                             background: percentage >= 80 ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' :
                                        percentage >= 60 ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' :
@@ -401,13 +446,13 @@ export default function ScoreHistory() {
                         >
                           {percentage}%
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#666666', textAlign: 'center', fontWeight: '500' }}>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, textAlign: 'center', fontWeight: '500' }}>
                           Performance Score
                         </Typography>
                       </Box>
 
                       <Box>
-                        <Typography variant="subtitle1" sx={{ color: '#000000', fontWeight: '600', mb: 2 }}>
+                        <Typography variant="subtitle1" sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 2 }}>
                           🎯 Question-by-Question Results:
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
