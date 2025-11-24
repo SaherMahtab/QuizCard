@@ -414,6 +414,18 @@ export default function PlayQuiz() {
 
   return (
     <GradientBackground>
+
+      {/* Screen reader announcements */}
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+          >
+            {quizStarted && !quizCompleted && `Question ${currentQuestionIndex + 1} of ${quiz.questions.length}`}
+            {quizCompleted && `Quiz completed. Your score is ${score} out of ${quiz.questions.length}`}
+          </div>
+
       <GlassAppBar position="static" elevation={0}>
         <Toolbar>
           <QuizIcon sx={{ mr: 2, color: theme.palette.primary.main, fontSize: 28 }} />
@@ -427,6 +439,9 @@ export default function PlayQuiz() {
               label={`${timeLeft}s`}
               warning={timeLeft <= 10 ? 'true' : 'false'}
               sx={{ ml: 2 }}
+              aria-label={`Time remaining: ${timeLeft} seconds`}
+              role="timer"
+              aria-live="polite"
             />
           )}
         </Toolbar>
@@ -464,6 +479,7 @@ export default function PlayQuiz() {
                 size="large"
                 onClick={startQuiz}
                 startIcon={<PlayArrowIcon />}
+                aria-label="Start quiz now"
               >
                 Start Quiz 🚀
               </StartButton>
@@ -586,6 +602,16 @@ export default function PlayQuiz() {
                     selected={selectedAnswer === index}
                     onClick={() => handleAnswerSelect(index)}
                     elevation={0}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Option ${String.fromCharCode(65 + index)}: ${option}`}
+                    aria-pressed={selectedAnswer === index}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleAnswerSelect(index);
+                      }
+                    }}
                   >
                     <Typography className="option-text">
                       <Box component="span" sx={{
@@ -610,6 +636,10 @@ export default function PlayQuiz() {
                   size="large"
                   onClick={handleNextQuestion}
                   disabled={selectedAnswer === null}
+                  aria-label={currentQuestionIndex < quiz.questions.length - 1
+                      ? `Continue to question ${currentQuestionIndex + 2}`
+                      : 'Finish quiz and view results'}
+                    aria-disabled={selectedAnswer === null}
                   sx={{
                     px: 6,
                     py: 2,

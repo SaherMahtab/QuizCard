@@ -437,6 +437,7 @@ export default function MyQuizzes() {
                           <IconButton
                             size="small"
                             onClick={() => handleShowQR(quiz.quizCode)}
+                            aria-label={`Show QR code for quiz ${quiz.title}`}
                             sx={{
                               color: '#7c3aed',
                               '&:hover': {
@@ -452,6 +453,7 @@ export default function MyQuizzes() {
                               navigator.clipboard.writeText(quiz.quizCode);
                               setCopySnackbar(true);
                             }}
+                            aria-label={`Copy quiz code ${quiz.quizCode}`}
                             sx={{
                               color: '#3b82f6',
                               '&:hover': {
@@ -471,6 +473,7 @@ export default function MyQuizzes() {
                       size="small"
                       startIcon={<EditIcon />}
                       onClick={() => navigate(`/teacher/edit-quiz/${quiz.id}`)}
+                      aria-label={`Edit quiz: ${quiz.title}`}
                     >
                       Edit
                     </EditButton>
@@ -478,6 +481,7 @@ export default function MyQuizzes() {
                       size="small"
                       startIcon={<AnalyticsIcon />}
                       onClick={() => navigate(`/teacher/quiz-analytics/${quiz.id}`)}
+                      aria-label={`View analytics for quiz: ${quiz.title}`}
                     >
                       Analytics
                     </AnalyticsButton>
@@ -486,6 +490,7 @@ export default function MyQuizzes() {
                       startIcon={<DeleteIcon />}
                       onClick={() => handleDeleteQuiz(quiz.id, quiz.title)}
                       disabled={deleteLoading === quiz.id}
+                      aria-label={`Delete quiz: ${quiz.title}`}
                     >
                       {deleteLoading === quiz.id ? 'Deleting...' : 'Delete'}
                     </DeleteButton>

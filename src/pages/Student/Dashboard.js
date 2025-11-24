@@ -335,6 +335,7 @@ export default function StudentDashboard() {
             startIcon={<LogoutIcon />}
             onClick={handleLogout}
             size="small"
+            aria-label="Logout from student account"
           >
             Logout
           </SecondaryButton>
@@ -382,6 +383,8 @@ export default function StudentDashboard() {
                 disabled={!quizCode}
                 startIcon={<PlayArrowIcon />}
                 sx={{ minWidth: '140px' }}
+                aria-label="Start quiz with entered code"
+                aria-disabled={!quizCode}
               >
                 Start Quiz
               </PrimaryButton>

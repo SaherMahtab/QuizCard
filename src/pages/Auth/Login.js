@@ -203,6 +203,8 @@ export default function Login() {
               fullWidth
               variant="contained"
               disabled={loading}
+              aria-label={loading ? 'Logging in, please wait' : 'Login to your account'}
+              aria-disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
             </LoginStyledButton>
