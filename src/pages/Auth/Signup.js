@@ -135,7 +135,13 @@ export default function Signup() {
       setLoading(true);
       await signup(formData.email, formData.password, formData.name, formData.role);
 
-      if (formData.role === 'teacher') {
+      // Check if there's a redirect URL stored
+      const redirectTo = localStorage.getItem('redirectAfterLogin');
+
+      if (redirectTo) {
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(redirectTo);
+      } else if (formData.role === 'teacher') {
         navigate('/teacher/dashboard');
       } else {
         navigate('/student/dashboard');

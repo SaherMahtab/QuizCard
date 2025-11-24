@@ -267,10 +267,19 @@ export default function PlayQuiz() {
   const [score, setScore] = useState(0);
   const [isCardFlipping, setIsCardFlipping] = useState(false);
 
+  // Redirect to login if not authenticated, storing the quiz code
   useEffect(() => {
+    if (!currentUser) {
+      localStorage.setItem('redirectAfterLogin', `/student/play/${quizCode}`);
+      navigate('/login');
+    }
+  }, [currentUser, quizCode, navigate]);
+
+  useEffect(() => {
+    if (!currentUser) return; // Add this check
     fetchQuiz();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentUser]); // Add currentUser as dependency
 
   useEffect(() => {
     if (quizStarted && !quizCompleted && timeLeft > 0) {
@@ -285,6 +294,8 @@ export default function PlayQuiz() {
   }, [timeLeft, quizStarted, quizCompleted]);
 
   const fetchQuiz = async () => {
+    if (!currentUser) return;
+
     try {
       const q = query(
         collection(db, 'quizzes'),

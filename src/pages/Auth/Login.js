@@ -104,7 +104,13 @@ export default function Login() {
       await login(formData.email, formData.password);
 
       setTimeout(() => {
-        if (userRole === 'teacher') {
+        // Check if there's a redirect URL stored
+        const redirectTo = localStorage.getItem('redirectAfterLogin');
+
+        if (redirectTo) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(redirectTo);
+        } else if (userRole === 'teacher') {
           navigate('/teacher/dashboard');
         } else {
           navigate('/student/dashboard');
