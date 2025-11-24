@@ -13,7 +13,7 @@ import {
   Chip,
   Fade
 } from '@mui/material';
-import { styled, keyframes } from '@mui/material/styles';
+import { styled, keyframes, useTheme } from '@mui/material/styles';
 import {
   EmojiEvents as EmojiEventsIcon,
   Timer as TimerIcon,
@@ -24,6 +24,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import DarkModeToggle from '../../components/Common/DarkModeToggle';
 
 // Animations (reduced intensity)
 const shake = keyframes`
@@ -32,7 +33,6 @@ const shake = keyframes`
   75% { transform: translateX(3px); }
 `;
 
-// Professional card flip animation
 const cardFlip = keyframes`
   0% {
     transform: perspective(1000px) rotateY(0deg);
@@ -45,7 +45,6 @@ const cardFlip = keyframes`
   }
 `;
 
-// Subtle fade animation for loading states
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -59,11 +58,17 @@ const fadeIn = keyframes`
 
 // Main quiz card container
 const QuizCardContainer = styled(Card)(({ theme, isFlipping }) => ({
-  background: 'rgba(255, 255, 255, 0.95)',
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.7)'
+    : 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(20px)',
   borderRadius: '24px',
-  border: '1px solid rgba(255, 255, 255, 0.3)',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.3)'
+    : '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+    : '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
   padding: '32px',
   minHeight: '600px',
   display: 'flex',
@@ -72,16 +77,21 @@ const QuizCardContainer = styled(Card)(({ theme, isFlipping }) => ({
   transformStyle: 'preserve-3d',
   position: 'relative',
   '&:hover': {
-    boxShadow: '0 25px 30px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.06)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 25px 30px -5px rgba(0, 0, 0, 0.7)'
+      : '0 25px 30px -5px rgba(0, 0, 0, 0.15)',
   },
   transition: 'all 0.3s ease'
 }));
 
 // Styled Components
-const GradientBackground = styled(Box)({
+const GradientBackground = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
-  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+    : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
   position: 'relative',
+  transition: 'background 0.3s ease',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -89,71 +99,100 @@ const GradientBackground = styled(Box)({
     left: 0,
     right: 0,
     bottom: 0,
-    background: `
-      radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)
-    `,
+    background: theme.palette.mode === 'dark'
+      ? `radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+         radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
+      : `radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+         radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)`,
     pointerEvents: 'none',
   }
-});
+}));
 
-const GlassAppBar = styled(AppBar)({
-  background: 'rgba(255, 255, 255, 0.25)',
+const GlassAppBar = styled(AppBar)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.8)'
+    : 'rgba(255, 255, 255, 0.25)',
   backdropFilter: 'blur(20px)',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-});
+  borderBottom: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.3s ease',
+}));
 
-const QuizStartCard = styled(Paper)({
-  background: 'rgba(255, 255, 255, 0.25)',
+const QuizStartCard = styled(Paper)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.25)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
   borderRadius: '20px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
   animation: `${fadeIn} 0.6s ease-out`,
   transition: 'all 0.3s ease',
   '&:hover': {
     transform: 'translateY(-5px)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 20px 40px rgba(0, 0, 0, 0.7)'
+      : '0 20px 40px rgba(0, 0, 0, 0.15)',
   }
-});
+}));
 
-const ResultCard = styled(Paper)({
-  background: 'rgba(255, 255, 255, 0.25)',
+const ResultCard = styled(Paper)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(30, 41, 59, 0.6)'
+    : 'rgba(255, 255, 255, 0.25)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  border: theme.palette.mode === 'dark'
+    ? '1px solid rgba(96, 165, 250, 0.2)'
+    : '1px solid rgba(255, 255, 255, 0.2)',
   borderRadius: '20px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.1)',
   textAlign: 'center',
   animation: `${fadeIn} 0.6s ease-out`,
-});
+}));
 
-// Question card within the main quiz card
 const QuestionCard = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+  background: theme.palette.mode === 'dark'
+    ? 'rgba(51, 65, 85, 0.6)'
+    : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
   borderRadius: '16px',
   padding: '24px',
   marginBottom: '24px',
-  border: '2px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  border: theme.palette.mode === 'dark'
+    ? '2px solid rgba(96, 165, 250, 0.2)'
+    : '2px solid rgba(59, 130, 246, 0.1)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 4px 6px -1px rgba(0, 0, 0, 0.5)'
+    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
   '& h4': {
-    color: '#1e293b',
+    color: theme.palette.text.primary,
     lineHeight: 1.4,
     fontWeight: '600'
   }
 }));
 
-// Option cards that look like actual cards
 const OptionCard = styled(Paper)(({ selected, theme }) => ({
-  background: selected 
+  background: selected
     ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
-    : 'rgba(255, 255, 255, 0.9)',
+    : (theme.palette.mode === 'dark'
+      ? 'rgba(51, 65, 85, 0.6)'
+      : 'rgba(255, 255, 255, 0.9)'),
   borderRadius: '16px',
   padding: '20px',
-  border: selected 
-    ? '2px solid #1d4ed8' 
-    : '2px solid rgba(59, 130, 246, 0.2)',
+  border: selected
+    ? '2px solid #1d4ed8'
+    : (theme.palette.mode === 'dark'
+      ? '2px solid rgba(96, 165, 250, 0.3)'
+      : '2px solid rgba(59, 130, 246, 0.2)'),
   cursor: 'pointer',
   transition: 'all 0.3s ease',
   minHeight: '80px',
@@ -161,16 +200,20 @@ const OptionCard = styled(Paper)(({ selected, theme }) => ({
   alignItems: 'center',
   boxShadow: selected
     ? '0 8px 25px -5px rgba(59, 130, 246, 0.3)'
-    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    : (theme.palette.mode === 'dark'
+      ? '0 4px 6px -1px rgba(0, 0, 0, 0.5)'
+      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'),
   '&:hover': {
     transform: 'translateY(-2px)',
     boxShadow: selected
       ? '0 12px 30px -5px rgba(59, 130, 246, 0.4)'
-      : '0 8px 25px -5px rgba(59, 130, 246, 0.15)',
+      : (theme.palette.mode === 'dark'
+        ? '0 8px 25px -5px rgba(59, 130, 246, 0.25)'
+        : '0 8px 25px -5px rgba(59, 130, 246, 0.15)'),
     borderColor: '#3b82f6'
   },
   '& .option-text': {
-    color: selected ? 'white' : '#1e293b',
+    color: selected ? 'white' : theme.palette.text.primary,
     fontWeight: selected ? '600' : '500',
     fontSize: '1.1rem',
     width: '100%'
@@ -211,6 +254,7 @@ export default function PlayQuiz() {
   const { quizCode } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const theme = useTheme();
 
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -257,7 +301,6 @@ export default function PlayQuiz() {
       const quizDoc = querySnapshot.docs[0];
       const quizData = { id: quizDoc.id, ...quizDoc.data() };
 
-      // Check if student has already attempted this quiz
       const scoreQuery = query(
         collection(db, 'scores'),
         where('studentId', '==', currentUser.uid),
@@ -266,7 +309,6 @@ export default function PlayQuiz() {
       const scoreSnapshot = await getDocs(scoreQuery);
 
       if (!scoreSnapshot.empty) {
-        // Student has already attempted this quiz
         alert('You have already attempted this quiz. Each student can attempt a quiz only once.');
         navigate('/student/dashboard');
         return;
@@ -309,17 +351,15 @@ export default function PlayQuiz() {
       setScore(score + 1);
     }
 
-    // Move to next question or finish with card flip animation
     if (currentQuestionIndex < quiz.questions.length - 1) {
-      // Trigger card flip animation
       setIsCardFlipping(true);
-      
+
       setTimeout(() => {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
         setSelectedAnswer(null);
         setTimeLeft(quiz.timePerQuestion);
         setIsCardFlipping(false);
-      }, 300); // Half of flip animation duration
+      }, 300);
     } else {
       finishQuiz([...answers, answerData], isCorrect ? score + 1 : score);
     }
@@ -338,7 +378,7 @@ export default function PlayQuiz() {
         answers: finalAnswers,
         completedAt: new Date().toISOString()
       };
-      
+
       const docRef = await addDoc(collection(db, 'scores'), scoreData);
       console.log('Score saved successfully with ID:', docRef.id);
     } catch (error) {
@@ -365,15 +405,17 @@ export default function PlayQuiz() {
     <GradientBackground>
       <GlassAppBar position="static" elevation={0}>
         <Toolbar>
-          <QuizIcon sx={{ mr: 2, color: '#3b82f6', fontSize: 28 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, color: '#000000', fontWeight: '600' }}>
+          <QuizIcon sx={{ mr: 2, color: theme.palette.primary.main, fontSize: 28 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
             {quiz.title}
           </Typography>
+          <DarkModeToggle />
           {quizStarted && !quizCompleted && (
             <TimerChip
               icon={<TimerIcon />}
               label={`${timeLeft}s`}
               warning={timeLeft <= 10 ? 'true' : 'false'}
+              sx={{ ml: 2 }}
             />
           )}
         </Toolbar>
@@ -383,26 +425,26 @@ export default function PlayQuiz() {
         {!quizStarted ? (
           <QuizStartCard sx={{ p: 5 }}>
             <Box sx={{ textAlign: 'center' }}>
-              <EmojiEventsIcon sx={{ fontSize: 80, mb: 2, color: '#3b82f6' }} />
-              <Typography 
-                variant="h3" 
-                gutterBottom 
-                sx={{ 
+              <EmojiEventsIcon sx={{ fontSize: 80, mb: 2, color: theme.palette.primary.main }} />
+              <Typography
+                variant="h3"
+                gutterBottom
+                sx={{
                   fontWeight: '700',
-                  color: '#000000',
+                  color: theme.palette.text.primary,
                   mb: 2
                 }}
               >
                 {quiz.title}
               </Typography>
-              <Typography variant="h5" sx={{ mb: 3, color: '#666666', fontWeight: '500' }}>
+              <Typography variant="h5" sx={{ mb: 3, color: theme.palette.text.secondary, fontWeight: '500' }}>
                 📚 {quiz.subject}
               </Typography>
               <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 1, color: '#000000', fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ mb: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
                   📝 {quiz.questions.length} Questions
                 </Typography>
-                <Typography variant="h6" sx={{ color: '#000000', fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
                   ⏱️ {quiz.timePerQuestion} seconds per question
                 </Typography>
               </Box>
@@ -420,20 +462,20 @@ export default function PlayQuiz() {
           <Fade in timeout={600}>
             <ResultCard sx={{ p: 5, textAlign: 'center' }}>
               <CheckCircleIcon sx={{ fontSize: 100, mb: 2, color: '#22c55e' }} />
-              <Typography 
-                variant="h3" 
-                gutterBottom 
-                sx={{ 
+              <Typography
+                variant="h3"
+                gutterBottom
+                sx={{
                   fontWeight: '700',
-                  color: '#000000'
+                  color: theme.palette.text.primary
                 }}
               >
                 Quiz Completed! 🎉
               </Typography>
-              <Typography 
-                variant="h2" 
-                sx={{ 
-                  my: 3, 
+              <Typography
+                variant="h2"
+                sx={{
+                  my: 3,
                   fontWeight: '700',
                   background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                   backgroundClip: 'text',
@@ -443,7 +485,7 @@ export default function PlayQuiz() {
               >
                 {score} / {quiz.questions.length}
               </Typography>
-              <Typography variant="h4" gutterBottom sx={{ color: '#666666', fontWeight: '500' }}>
+              <Typography variant="h4" gutterBottom sx={{ color: theme.palette.text.secondary, fontWeight: '500' }}>
                 {((score / quiz.questions.length) * 100).toFixed(1)}%
               </Typography>
               <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -458,9 +500,9 @@ export default function PlayQuiz() {
                     background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                     color: 'white',
                     fontWeight: 'bold',
-                    '&:hover': { 
+                    '&:hover': {
                       background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
-                      transform: 'translateY(-1px)' 
+                      transform: 'translateY(-1px)'
                     },
                     transition: 'all 0.3s ease'
                   }}
@@ -475,13 +517,13 @@ export default function PlayQuiz() {
                     px: 4,
                     py: 1.5,
                     borderRadius: '50px',
-                    borderColor: '#3b82f6',
-                    color: '#3b82f6',
+                    borderColor: theme.palette.primary.main,
+                    color: theme.palette.primary.main,
                     fontWeight: 'bold',
-                    '&:hover': { 
-                      borderColor: '#1d4ed8', 
+                    '&:hover': {
+                      borderColor: theme.palette.primary.dark,
                       background: 'rgba(59, 130, 246, 0.1)',
-                      transform: 'translateY(-1px)' 
+                      transform: 'translateY(-1px)'
                     },
                     transition: 'all 0.3s ease'
                   }}
@@ -491,92 +533,96 @@ export default function PlayQuiz() {
               </Box>
             </ResultCard>
           </Fade>
-          ) : (
-            <>
-              <Box sx={{ mb: 3, textAlign: 'center' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: '#1e293b' }}>
-                  Question {currentQuestionIndex + 1} of {quiz.questions.length}
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={progress}
-                  sx={{
-                    height: 12,
+        ) : (
+          <>
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: theme.palette.text.primary }}>
+                Question {currentQuestionIndex + 1} of {quiz.questions.length}
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={progress}
+                sx={{
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: theme.palette.mode === 'dark'
+                    ? 'rgba(96, 165, 250, 0.2)'
+                    : 'rgba(59, 130, 246, 0.1)',
+                  '& .MuiLinearProgress-bar': {
+                    background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
                     borderRadius: 6,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    '& .MuiLinearProgress-bar': {
-                      background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
-                      borderRadius: 6,
-                    },
-                  }}
-                />
+                  },
+                }}
+              />
+            </Box>
+
+            <QuizCardContainer elevation={0} isFlipping={isCardFlipping}>
+              <QuestionCard elevation={0}>
+                <Typography variant="h4" sx={{ fontWeight: '600', textAlign: 'center', mb: 2 }}>
+                  {currentQuestion.questionText}
+                </Typography>
+              </QuestionCard>
+
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: 3,
+                flex: 1
+              }}>
+                {currentQuestion.options.map((option, index) => (
+                  <OptionCard
+                    key={`${currentQuestionIndex}-${index}`}
+                    selected={selectedAnswer === index}
+                    onClick={() => handleAnswerSelect(index)}
+                    elevation={0}
+                  >
+                    <Typography className="option-text">
+                      <Box component="span" sx={{
+                        fontWeight: '700',
+                        mr: 2,
+                        fontSize: '1.2rem',
+                        color: selectedAnswer === index
+                          ? 'rgba(255,255,255,0.9)'
+                          : theme.palette.primary.main
+                      }}>
+                        {String.fromCharCode(65 + index)}.
+                      </Box>
+                      {option}
+                    </Typography>
+                  </OptionCard>
+                ))}
               </Box>
 
-              <QuizCardContainer elevation={0} isFlipping={isCardFlipping}>
-                <QuestionCard elevation={0}>
-                  <Typography variant="h4" sx={{ fontWeight: '600', textAlign: 'center', mb: 2 }}>
-                    {currentQuestion.questionText}
-                  </Typography>
-                </QuestionCard>
-
-                <Box sx={{ 
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gap: 3,
-                  flex: 1
-                }}>
-                  {currentQuestion.options.map((option, index) => (
-                    <OptionCard
-                      key={`${currentQuestionIndex}-${index}`}
-                      selected={selectedAnswer === index}
-                      onClick={() => handleAnswerSelect(index)}
-                      elevation={0}
-                    >
-                      <Typography className="option-text">
-                        <Box component="span" sx={{ 
-                          fontWeight: '700', 
-                          mr: 2, 
-                          fontSize: '1.2rem',
-                          color: selectedAnswer === index ? 'rgba(255,255,255,0.9)' : '#3b82f6'
-                        }}>
-                          {String.fromCharCode(65 + index)}.
-                        </Box>
-                        {option}
-                      </Typography>
-                    </OptionCard>
-                  ))}
-                </Box>
-
-                <Box sx={{ mt: 4, textAlign: 'center' }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={handleNextQuestion}
-                    disabled={selectedAnswer === null}
-                    sx={{
-                      px: 6,
-                      py: 2,
-                      fontSize: '1.1rem',
-                      borderRadius: '50px',
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                      fontWeight: 'bold',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
-                        transform: 'translateY(-1px)'
-                      },
-                      '&:disabled': {
-                        background: '#9ca3af',
-                      },
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    {currentQuestionIndex < quiz.questions.length - 1 ? 'Next Question →' : 'Finish Quiz ✓'}
-                  </Button>
-                </Box>
-              </QuizCardContainer>
-            </>
-          )}
-        </Container>
-      </GradientBackground>
-    );
-  }
+              <Box sx={{ mt: 4, textAlign: 'center' }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={handleNextQuestion}
+                  disabled={selectedAnswer === null}
+                  sx={{
+                    px: 6,
+                    py: 2,
+                    fontSize: '1.1rem',
+                    borderRadius: '50px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    fontWeight: 'bold',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                      transform: 'translateY(-1px)'
+                    },
+                    '&:disabled': {
+                      background: '#9ca3af',
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {currentQuestionIndex < quiz.questions.length - 1 ? 'Next Question →' : 'Finish Quiz ✓'}
+                </Button>
+              </Box>
+            </QuizCardContainer>
+          </>
+        )}
+      </Container>
+    </GradientBackground>
+  );
+}
