@@ -350,7 +350,7 @@ export default function StudentDashboard() {
       </GlassAppBar>
 
       <Container maxWidth="lg" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
-        {/* Welcome Section */}
+        {/*Welcome Section*/}
         <WelcomeSection>
           <StyledCard sx={{ p: 4, mb: 4 }}>
             <Typography
