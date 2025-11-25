@@ -11,7 +11,11 @@ import {
   Toolbar,
   IconButton,
   Divider,
-  Alert
+  Alert,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { styled, keyframes, useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -23,529 +27,394 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import DarkModeToggle from '../../components/Common/DarkModeToggle';
 
-// Animations
+// Animations (kept small)
 const fadeInUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
-const shimmer = keyframes`
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
-`;
-
-// Styled Components with Dark Mode Support
+// Basic styled components (kept similar to your current theme)
 const GradientBackground = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
   background: theme.palette.mode === 'dark'
-    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
-    : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
-  position: 'relative',
-  transition: 'background 0.3s ease',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: theme.palette.mode === 'dark'
-      ? `radial-gradient(circle at 20% 80%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
-         radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
-      : `radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-         radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)`,
-    pointerEvents: 'none',
-  }
+      ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+      : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  position: 'relative'
 }));
 
 const GlassAppBar = styled(AppBar)(({ theme }) => ({
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(30, 41, 59, 0.8)'
-    : 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(20px)',
-  borderBottom: theme.palette.mode === 'dark'
-    ? '1px solid rgba(96, 165, 250, 0.2)'
-    : '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: theme.palette.mode === 'dark'
-    ? '0 4px 20px rgba(0, 0, 0, 0.5)'
-    : '0 4px 20px rgba(59, 130, 246, 0.08)',
-  transition: 'all 0.3s ease',
+  background: theme.palette.mode === 'dark' ? 'rgba(30,41,59,0.8)' : 'rgba(255,255,255,0.95)',
+  backdropFilter: 'blur(20px)'
 }));
 
 const MainCard = styled(Paper)(({ theme }) => ({
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(30, 41, 59, 0.6)'
-    : 'rgba(255, 255, 255, 0.98)',
-  backdropFilter: 'blur(20px)',
-  borderRadius: '20px',
-  border: theme.palette.mode === 'dark'
-    ? '1px solid rgba(96, 165, 250, 0.2)'
-    : '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: theme.palette.mode === 'dark'
-    ? '0 10px 25px rgba(0, 0, 0, 0.5)'
-    : '0 10px 25px rgba(59, 130, 246, 0.1)',
-  animation: `${fadeInUp} 0.8s ease-out`,
-  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  marginTop: 16,
+  padding: 24,
+  borderRadius: 12,
+  animation: `${fadeInUp} 0.6s ease-out`
 }));
 
 const QuestionCard = styled(Paper)(({ theme }) => ({
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(30, 41, 59, 0.7)'
-    : 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(20px)',
-  borderRadius: '16px',
-  border: theme.palette.mode === 'dark'
-    ? '1px solid rgba(96, 165, 250, 0.2)'
-    : '1px solid rgba(59, 130, 246, 0.1)',
-  boxShadow: theme.palette.mode === 'dark'
-    ? '0 8px 20px rgba(0, 0, 0, 0.5)'
-    : '0 8px 20px rgba(59, 130, 246, 0.08)',
-  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-  animation: `${fadeInUp} 0.8s ease-out`,
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: theme.palette.mode === 'dark'
-      ? '0 12px 30px rgba(96, 165, 250, 0.3)'
-      : '0 12px 30px rgba(59, 130, 246, 0.15)',
-  }
+  padding: 16,
+  borderRadius: 12,
+  marginTop: 12
 }));
 
-const StyledButton = styled(Button)({
-  borderRadius: '12px',
-  padding: '10px 24px',
-  fontWeight: '600',
-  textTransform: 'none',
-  fontSize: '0.95rem',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  position: 'relative',
-  overflow: 'hidden',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: '-100%',
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
-    transition: 'left 0.6s',
-  },
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    '&::before': {
-      left: '100%',
-      animation: `${shimmer} 0.6s`,
-    }
-  }
-});
-
-const PrimaryButton = styled(StyledButton)({
-  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-  color: 'white',
-  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.25)',
-  '&:hover': {
-    background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
-    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
-  },
-  '&:disabled': {
-    background: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)',
-    boxShadow: 'none',
-    transform: 'none',
-  }
-});
-
-const SecondaryButton = styled(StyledButton)(({ theme }) => ({
-  border: theme.palette.mode === 'dark'
-    ? '1px solid rgba(96, 165, 250, 0.3)'
-    : '1px solid rgba(59, 130, 246, 0.3)',
-  color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(59, 130, 246, 0.1)'
-    : 'rgba(59, 130, 246, 0.05)',
-  '&:hover': {
-    background: theme.palette.mode === 'dark'
-      ? 'rgba(59, 130, 246, 0.2)'
-      : 'rgba(59, 130, 246, 0.1)',
-    borderColor: '#3b82f6',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.2)',
-  }
-}));
-
-const StyledTextField = styled(TextField)(({ theme }) => ({
+const StyledTextField = styled(TextField)({
   '& .MuiOutlinedInput-root': {
-    borderRadius: '12px',
-    background: theme.palette.mode === 'dark'
-      ? 'rgba(30, 41, 59, 0.6)'
-      : 'rgba(255, 255, 255, 0.8)',
-    transition: 'all 0.3s ease',
-    '&:hover': {
-      background: theme.palette.mode === 'dark'
-        ? 'rgba(30, 41, 59, 0.8)'
-        : 'rgba(255, 255, 255, 0.9)',
-    },
-    '&.Mui-focused': {
-      background: theme.palette.mode === 'dark'
-        ? 'rgba(30, 41, 59, 0.9)'
-        : 'rgba(255, 255, 255, 1)',
-      '& fieldset': {
-        borderColor: '#3b82f6',
-        borderWidth: '2px',
-      }
-    }
-  },
-  '& .MuiInputLabel-root': {
-    color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
-    fontWeight: '500',
-  },
-  '& .MuiOutlinedInput-input': {
-    color: theme.palette.text.primary,
+    borderRadius: '10px'
   }
-}));
-
-const DeleteButton = styled(IconButton)(({ theme }) => ({
-  color: '#ef4444',
-  background: 'rgba(239, 68, 68, 0.1)',
-  borderRadius: '12px',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover': {
-    background: 'rgba(239, 68, 68, 0.2)',
-    transform: 'scale(1.1)',
-    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
-  }
-}));
+});
 
 export default function CreateQuiz() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const theme = useTheme();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+
+  // New question object supports 'type'
+  const emptyQuestion = () => ({
+    questionText: '',
+    type: 'single', // 'single' | 'multiple' | 'truefalse'
+    options: ['', '', '', ''],
+    // For single & truefalse use correctAnswer (number for index or 'True'/'False' string)
+    // For multiple use correctAnswers array of indices
+    correctAnswer: 0,
+    correctAnswers: []
+  });
 
   const [quizData, setQuizData] = useState({
     title: '',
     subject: '',
     timePerQuestion: 10,
-    questions: [
-      {
-        questionText: '',
-        options: ['', '', '', ''],
-        correctAnswer: 0
-      }
-    ]
+    questions: [emptyQuestion()]
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
   const handleQuizChange = (field, value) => {
-    setQuizData({ ...quizData, [field]: value });
+    setQuizData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleQuestionChange = (index, field, value) => {
-    const updatedQuestions = [...quizData.questions];
-    updatedQuestions[index][field] = value;
-    setQuizData({ ...quizData, questions: updatedQuestions });
-  };
-
-  const handleOptionChange = (qIndex, optIndex, value) => {
-    const updatedQuestions = [...quizData.questions];
-    updatedQuestions[qIndex].options[optIndex] = value;
-    setQuizData({ ...quizData, questions: updatedQuestions });
-  };
-
-  const addQuestion = () => {
-    setQuizData({
-      ...quizData,
-      questions: [
-        ...quizData.questions,
-        {
-          questionText: '',
-          options: ['', '', '', ''],
-          correctAnswer: 0
-        }
-      ]
+    setQuizData(prev => {
+      const questions = [...prev.questions];
+      questions[index] = { ...questions[index], [field]: value };
+      return { ...prev, questions };
     });
   };
 
-  const deleteQuestion = (index) => {
-    if (quizData.questions.length > 1) {
-      const updatedQuestions = quizData.questions.filter((_, i) => i !== index);
-      setQuizData({ ...quizData, questions: updatedQuestions });
-    }
+  const handleOptionChange = (qIndex, optIndex, value) => {
+    setQuizData(prev => {
+      const questions = [...prev.questions];
+      const opts = [...questions[qIndex].options];
+      opts[optIndex] = value;
+      questions[qIndex].options = opts;
+      return { ...prev, questions };
+    });
   };
 
-  const generateQuizCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  const addQuestion = () => {
+    setQuizData(prev => ({ ...prev, questions: [...prev.questions, emptyQuestion()] }));
   };
+
+  const deleteQuestion = (index) => {
+    setQuizData(prev => {
+      if (prev.questions.length <= 1) return prev;
+      const questions = prev.questions.filter((_, i) => i !== index);
+      return { ...prev, questions };
+    });
+  };
+
+  const toggleMultiAnswer = (qIndex, optIndex) => {
+    setQuizData(prev => {
+      const questions = [...prev.questions];
+      const q = { ...questions[qIndex] };
+      const arr = Array.isArray(q.correctAnswers) ? [...q.correctAnswers] : [];
+      const pos = arr.indexOf(optIndex);
+      if (pos === -1) arr.push(optIndex);
+      else arr.splice(pos, 1);
+      q.correctAnswers = arr;
+      // keep correctAnswer for single/truefalse unaffected
+      questions[qIndex] = q;
+      return { ...prev, questions };
+    });
+  };
+
+  const setSingleCorrect = (qIndex, optIndex) => {
+    handleQuestionChange(qIndex, 'correctAnswer', optIndex);
+    // also clear multi answers
+    setQuizData(prev => {
+      const questions = [...prev.questions];
+      questions[qIndex].correctAnswers = [];
+      return { ...prev, questions };
+    });
+  };
+
+  const setTrueFalseCorrect = (qIndex, val) => {
+    // store as string 'True' or 'False' in correctAnswer for TF
+    handleQuestionChange(qIndex, 'correctAnswer', val ? 'True' : 'False');
+    setQuizData(prev => {
+      const questions = [...prev.questions];
+      questions[qIndex].correctAnswers = [];
+      return { ...prev, questions };
+    });
+  };
+
+  const handleTypeChange = (qIndex, newType) => {
+    setQuizData(prev => {
+      const questions = [...prev.questions];
+      const q = { ...questions[qIndex] };
+      q.type = newType;
+      if (newType === 'truefalse') {
+        q.options = ['True', 'False'];
+        q.correctAnswer = 'True';
+        q.correctAnswers = [];
+      } else if (newType === 'multiple') {
+        q.options = q.options && q.options.length ? q.options : ['', '', '', ''];
+        q.correctAnswers = [];
+        q.correctAnswer = null;
+      } else {
+        q.options = q.options && q.options.length ? q.options.slice(0, 4) : ['', '', '', ''];
+        q.correctAnswer = 0;
+        q.correctAnswers = [];
+      }
+      questions[qIndex] = q;
+      return { ...prev, questions };
+    });
+  };
+
+  const validateQuiz = () => {
+    if (!quizData.title.trim() || !quizData.subject.trim()) {
+      setError('Please fill in quiz title and subject');
+      return false;
+    }
+    for (let i = 0; i < quizData.questions.length; i++) {
+      const q = quizData.questions[i];
+      if (!q.questionText || q.questionText.trim() === '') {
+        setError(`Question ${i + 1} cannot be empty.`);
+        return false;
+      }
+      if (!q.options || q.options.length < 2) {
+        setError(`Question ${i + 1} must have at least 2 options.`);
+        return false;
+      }
+      for (let j = 0; j < q.options.length; j++) {
+        if (!q.options[j] || q.options[j].trim() === '') {
+          setError(`Option ${j + 1} of Question ${i + 1} cannot be empty.`);
+          return false;
+        }
+      }
+      if (q.type === 'multiple') {
+        if (!q.correctAnswers || q.correctAnswers.length === 0) {
+          setError(`Question ${i + 1}: pick at least one correct option.`);
+          return false;
+        }
+      } else if (q.type === 'truefalse') {
+        if (q.correctAnswer !== 'True' && q.correctAnswer !== 'False') {
+          setError(`Question ${i + 1}: select True or False as correct answer.`);
+          return false;
+        }
+      } else { // single
+        if (q.correctAnswer === null || q.correctAnswer === undefined || q.correctAnswer < 0 || q.correctAnswer >= q.options.length) {
+          setError(`Question ${i + 1}: select a correct option.`);
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  const generateQuizCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
 
-    // Validation
-    if (!quizData.title.trim() || !quizData.subject.trim()) {
-      setError('Please fill in quiz title and subject');
-      return;
-    }
-
-    for (let i = 0; i < quizData.questions.length; i++) {
-      const q = quizData.questions[i];
-
-      if (!q.questionText || q.questionText.trim() === '') {
-        setError(`Question ${i + 1} cannot be empty.`);
-        return;
-      }
-
-      if (!q.options || q.options.length < 2) {
-        setError(`Question ${i + 1} must have at least 2 options.`);
-        return;
-      }
-
-      for (let j = 0; j < q.options.length; j++) {
-        const opt = q.options[j];
-        if (!opt || opt.trim() === '') {
-          setError(`Option ${j + 1} of Question ${i + 1} cannot be empty.`);
-          return;
-        }
-      }
-
-      if (
-          q.correctAnswer === null ||
-          q.correctAnswer === undefined ||
-          q.correctAnswer < 0 ||
-          q.correctAnswer >= q.options.length
-      ) {
-        setError(`Question ${i + 1} must have one correct answer selected.`);
-        return;
-      }
-    }
+    if (!validateQuiz()) return;
 
     try {
       setLoading(true);
-
       const quizCode = generateQuizCode();
 
-      await addDoc(collection(db, 'quizzes'), {
+      const payload = {
         title: quizData.title,
         subject: quizData.subject,
         teacherId: currentUser.uid,
-        quizCode: quizCode,
-        timePerQuestion: parseInt(quizData.timePerQuestion),
+        quizCode,
+        timePerQuestion: parseInt(quizData.timePerQuestion, 10),
         questions: quizData.questions,
         createdAt: new Date().toISOString(),
         isPublic: true
-      });
+      };
 
+      await addDoc(collection(db, 'quizzes'), payload);
       setSuccess(true);
-      setTimeout(() => {
-        navigate('/teacher/dashboard');
-      }, 2000);
+      setTimeout(() => navigate('/teacher/dashboard'), 1400);
     } catch (err) {
       setError('Failed to create quiz: ' + err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <GradientBackground>
-      <GlassAppBar position="static" elevation={0}>
-        <Toolbar>
-          <IconButton
-            edge="start"
-            onClick={() => navigate('/teacher/dashboard')}
-            sx={{
-              color: theme.palette.mode === 'dark' ? '#93c5fd' : '#1e40af',
-              background: theme.palette.mode === 'dark'
-                ? 'rgba(59, 130, 246, 0.15)'
-                : 'rgba(59, 130, 246, 0.1)',
-              borderRadius: '12px',
-              '&:hover': {
-                background: theme.palette.mode === 'dark'
-                  ? 'rgba(59, 130, 246, 0.25)'
-                  : 'rgba(59, 130, 246, 0.2)',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-          <SchoolIcon sx={{ mx: 2, color: theme.palette.primary.main, fontSize: 28 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
-            Create New Quiz
-          </Typography>
-          <DarkModeToggle />
-        </Toolbar>
-      </GlassAppBar>
+      <GradientBackground>
+        <GlassAppBar position="static" elevation={0}>
+          <Toolbar>
+            <IconButton edge="start" onClick={() => navigate('/teacher/dashboard')} sx={{ mr: 1 }}>
+              <ArrowBackIcon />
+            </IconButton>
+            <SchoolIcon sx={{ mr: 2 }} />
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>Create New Quiz</Typography>
+            <DarkModeToggle />
+          </Toolbar>
+        </GlassAppBar>
 
-      <Container maxWidth="md" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
-        {error && (
-          <Alert
-            severity="error"
-            sx={{
-              mb: 2,
-              borderRadius: '12px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)'
-            }}
-          >
-            {error}
-          </Alert>
-        )}
-        {success && (
-          <Alert
-            severity="success"
-            sx={{
-              mb: 2,
-              borderRadius: '12px',
-              background: 'rgba(34, 197, 94, 0.1)',
-              border: '1px solid rgba(34, 197, 94, 0.2)'
-            }}
-          >
-            Quiz created successfully! Redirecting...
-          </Alert>
-        )}
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mb: 2 }}>Quiz created successfully! Redirecting...</Alert>}
 
-        <MainCard sx={{ p: 4 }}>
-          <form onSubmit={handleSubmit}>
-            {/* Quiz Details */}
-            <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
-              Quiz Details
-            </Typography>
+          <MainCard>
+            <form onSubmit={handleSubmit}>
+              <Typography variant="h5" gutterBottom>Quiz Details</Typography>
 
-            <StyledTextField
-              fullWidth
-              required
-              label="Quiz Title"
-              value={quizData.title}
-              onChange={(e) => handleQuizChange('title', e.target.value)}
-              sx={{ mt: 2 }}
-            />
-
-            <StyledTextField
-              fullWidth
-              required
-              label="Subject"
-              value={quizData.subject}
-              onChange={(e) => handleQuizChange('subject', e.target.value)}
-              sx={{ mt: 2 }}
-            />
-
-            <StyledTextField
-              fullWidth
-              type="number"
-              label="Time per Question (seconds)"
-              value={quizData.timePerQuestion}
-              onChange={(e) => handleQuizChange('timePerQuestion', e.target.value)}
-              sx={{ mt: 2 }}
-              inputProps={{ min: 5, max: 60 }}
-            />
-
-            <Divider sx={{ my: 4, background: theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.1)' }} />
-
-            {/* Questions */}
-            <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
-              Questions
-            </Typography>
-
-            {quizData.questions.map((question, qIndex) => (
-              <QuestionCard key={qIndex} sx={{ p: 3, mt: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
-                    Question {qIndex + 1}
-                  </Typography>
-                  {quizData.questions.length > 1 && (
-                    <DeleteButton onClick={() => deleteQuestion(qIndex)}>
-                      <DeleteIcon />
-                    </DeleteButton>
-                  )}
-                </Box>
-
-                <StyledTextField
+              <StyledTextField
                   fullWidth
                   required
-                  label="Question Text"
-                  value={question.questionText}
-                  onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
-                  multiline
-                  rows={2}
+                  label="Quiz Title"
+                  value={quizData.title}
+                  onChange={(e) => handleQuizChange('title', e.target.value)}
                   sx={{ mt: 2 }}
-                />
+              />
 
-                <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
-                  Options:
-                </Typography>
+              <StyledTextField
+                  fullWidth
+                  required
+                  label="Subject"
+                  value={quizData.subject}
+                  onChange={(e) => handleQuizChange('subject', e.target.value)}
+                  sx={{ mt: 2 }}
+              />
 
-                {question.options.map((option, optIndex) => (
-                  <Box key={optIndex} sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                    <Typography sx={{ mr: 2, minWidth: 80, color: theme.palette.text.secondary }}>
-                      Option {optIndex + 1}:
-                    </Typography>
+              <StyledTextField
+                  fullWidth
+                  type="number"
+                  label="Time per Question (seconds)"
+                  value={quizData.timePerQuestion}
+                  onChange={(e) => handleQuizChange('timePerQuestion', e.target.value)}
+                  sx={{ mt: 2 }}
+                  inputProps={{ min: 5, max: 600 }}
+              />
+
+              <Divider sx={{ my: 3 }} />
+
+              <Typography variant="h5" gutterBottom>Questions</Typography>
+
+              {quizData.questions.map((q, qIndex) => (
+                  <QuestionCard key={qIndex}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="h6">Question {qIndex + 1}</Typography>
+                      <Box>
+                        <FormControl size="small" sx={{ mr: 1, minWidth: 160 }}>
+                          <InputLabel id={`type-label-${qIndex}`}>Type</InputLabel>
+                          <Select
+                              labelId={`type-label-${qIndex}`}
+                              value={q.type}
+                              label="Type"
+                              onChange={(e) => handleTypeChange(qIndex, e.target.value)}
+                          >
+                            <MenuItem value="single">Single Answer</MenuItem>
+                            <MenuItem value="multiple">Multiple Select</MenuItem>
+                            <MenuItem value="truefalse">True / False</MenuItem>
+                          </Select>
+                        </FormControl>
+
+                        {quizData.questions.length > 1 && (
+                            <IconButton onClick={() => deleteQuestion(qIndex)}>
+                              <DeleteIcon />
+                            </IconButton>
+                        )}
+                      </Box>
+                    </Box>
+
                     <StyledTextField
-                      fullWidth
-                      required
-                      value={option}
-                      onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
-                      color={question.correctAnswer === optIndex ? 'success' : 'primary'}
+                        fullWidth
+                        required
+                        label="Question Text"
+                        value={q.questionText}
+                        onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
+                        multiline
+                        rows={2}
+                        sx={{ mt: 2 }}
                     />
-                    <Button
-                      variant={question.correctAnswer === optIndex ? 'contained' : 'outlined'}
-                      color="success"
-                      size="small"
-                      sx={{
-                        ml: 2,
-                        borderRadius: '12px',
-                        textTransform: 'none',
-                        fontWeight: '600',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'scale(1.05)',
-                        }
-                      }}
-                      onClick={() => handleQuestionChange(qIndex, 'correctAnswer', optIndex)}
-                    >
-                      {question.correctAnswer === optIndex ? 'Correct ✓' : 'Mark Correct'}
-                    </Button>
-                  </Box>
-                ))}
-              </QuestionCard>
-            ))}
 
-            <SecondaryButton
-              startIcon={<AddIcon />}
-              onClick={addQuestion}
-              sx={{ mt: 3 }}
-              fullWidth
-            >
-              Add Another Question
-            </SecondaryButton>
+                    <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>Options</Typography>
 
-            <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-              <SecondaryButton
-                onClick={() => navigate('/teacher/dashboard')}
-                fullWidth
-              >
-                Cancel
-              </SecondaryButton>
-              <PrimaryButton
-                type="submit"
-                fullWidth
-                disabled={loading}
-              >
-                {loading ? 'Creating Quiz...' : 'Create Quiz'}
-              </PrimaryButton>
-            </Box>
-          </form>
-        </MainCard>
-      </Container>
-    </GradientBackground>
+                    {q.type === 'truefalse' ? (
+                        // True/False: show two fixed options and choice toggle
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          <Button
+                              variant={q.correctAnswer === 'True' ? 'contained' : 'outlined'}
+                              onClick={() => setTrueFalseCorrect(qIndex, true)}
+                          >
+                            True
+                          </Button>
+                          <Button
+                              variant={q.correctAnswer === 'False' ? 'contained' : 'outlined'}
+                              onClick={() => setTrueFalseCorrect(qIndex, false)}
+                          >
+                            False
+                          </Button>
+                        </Box>
+                    ) : (
+                        // single or multiple: show options array
+                        <>
+                          {q.options.map((opt, optIndex) => (
+                              <Box key={optIndex} sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                <Typography sx={{ mr: 2, minWidth: 90 }}>Option {optIndex + 1}:</Typography>
+                                <StyledTextField
+                                    fullWidth
+                                    value={opt}
+                                    onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
+                                />
+                                {q.type === 'multiple' ? (
+                                    <Button
+                                        variant={q.correctAnswers && q.correctAnswers.includes(optIndex) ? 'contained' : 'outlined'}
+                                        sx={{ ml: 2 }}
+                                        onClick={() => toggleMultiAnswer(qIndex, optIndex)}
+                                    >
+                                      {q.correctAnswers && q.correctAnswers.includes(optIndex) ? 'Correct ✓' : 'Mark'}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant={q.correctAnswer === optIndex ? 'contained' : 'outlined'}
+                                        sx={{ ml: 2 }}
+                                        onClick={() => setSingleCorrect(qIndex, optIndex)}
+                                    >
+                                      {q.correctAnswer === optIndex ? 'Correct ✓' : 'Mark Correct'}
+                                    </Button>
+                                )}
+                              </Box>
+                          ))}
+                        </>
+                    )}
+                  </QuestionCard>
+              ))}
+
+              <Button startIcon={<AddIcon />} onClick={addQuestion} sx={{ mt: 2 }}>Add Another Question</Button>
+
+              <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+                <Button variant="outlined" onClick={() => navigate('/teacher/dashboard')} fullWidth>Cancel</Button>
+                <Button type="submit" variant="contained" onClick={handleSubmit} fullWidth disabled={loading}>
+                  {loading ? 'Creating...' : 'Create Quiz'}
+                </Button>
+              </Box>
+            </form>
+          </MainCard>
+        </Container>
+      </GradientBackground>
   );
 }
