@@ -35,6 +35,7 @@ import DarkModeToggle from '../../components/Common/DarkModeToggle';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import QrCodeIcon from '@mui/icons-material/QrCode';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 // Animations
 const fadeInUp = keyframes`
@@ -210,6 +211,16 @@ const PrimaryButton = styled(ActionButton)(({ theme }) => ({
     boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
   }
 }));
+
+const PreviewButton = styled(ActionButton)({
+  color: '#7c3aed',
+  background: 'rgba(124, 58, 237, 0.1)',
+  border: '1px solid rgba(124, 58, 237, 0.2)',
+  '&:hover': {
+    background: 'rgba(124, 58, 237, 0.2)',
+    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+  }
+});
 
 const EditButton = styled(ActionButton)({
   color: '#059669',
@@ -475,6 +486,17 @@ export default function MyQuizzes() {
                   </CardContent>
 
                   <CardActions sx={{ p: 2, pt: 0, gap: 1, flexWrap: 'wrap' }}>
+                  <Tooltip title="Preview how students will see this quiz" arrow>
+                    <PreviewButton
+                      size="small"
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => navigate(`/teacher/preview-quiz/${quiz.id}`)}
+                      aria-label={`Preview quiz: ${quiz.title}`}
+                    >
+                      Preview
+                    </PreviewButton>
+                    </Tooltip>
+
                   <Tooltip title="Edit this quiz" arrow>
                     <EditButton
                       size="small"
