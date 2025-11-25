@@ -237,8 +237,11 @@ export default function Signup() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
+                      aria-label={showPassword ? "hide password" : "show password"}
                       onClick={() => setShowPassword(!showPassword)}
+                      onMouseDown={(e) => e.preventDefault()}
                       edge="end"
+                      type="button"
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
@@ -266,14 +269,18 @@ export default function Signup() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
+                      aria-label={showConfirmPassword ? "hide confirm password" : "show confirm password"}
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onMouseDown={(e) => e.preventDefault()}
                       edge="end"
+                      type="button"
                     >
                       {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
+              sx={{ mb: 2 }}
             />
 
             <Box sx={{ mt: 3, mb: 2 }}>
@@ -318,6 +325,7 @@ export default function Signup() {
                 Already have an account?{' '}
                 <Link
                   component="button"
+                  type="button"
                   variant="body2"
                   onClick={() => navigate('/login')}
                   sx={{
@@ -325,6 +333,10 @@ export default function Signup() {
                     fontWeight: 'bold',
                     textDecoration: 'none',
                     cursor: 'pointer',
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    font: 'inherit',
                   }}
                 >
                   Login

@@ -188,14 +188,18 @@ export default function Login() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
+                      aria-label={showPassword ? "hide password" : "show password"}
                       onClick={() => setShowPassword(!showPassword)}
+                      onMouseDown={(e) => e.preventDefault()}
                       edge="end"
+                      type="button"
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
+              sx={{ mb: 2 }}
             />
 
             <LoginStyledButton
@@ -214,6 +218,7 @@ export default function Login() {
                 Don't have an account?{' '}
                 <Link
                   component="button"
+                  type="button"
                   variant="body2"
                   onClick={() => navigate('/signup')}
                   sx={{
@@ -221,6 +226,10 @@ export default function Login() {
                     fontWeight: 'bold',
                     textDecoration: 'none',
                     cursor: 'pointer',
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    font: 'inherit',
                   }}
                 >
                   Sign Up
