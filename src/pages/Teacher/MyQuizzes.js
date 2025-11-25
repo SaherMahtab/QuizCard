@@ -16,7 +16,8 @@ import {
   Chip,
   CircularProgress,
   Snackbar,
-  Alert
+  Alert,
+  Tooltip
 } from '@mui/material';
 import { styled, keyframes, useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -434,6 +435,7 @@ export default function MyQuizzes() {
                           Quiz Code: {quiz.quizCode}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Tooltip title="Show QR Code" arrow>
                           <IconButton
                             size="small"
                             onClick={() => handleShowQR(quiz.quizCode)}
@@ -447,6 +449,9 @@ export default function MyQuizzes() {
                           >
                             <QrCodeIcon fontSize="small" />
                           </IconButton>
+                          </Tooltip>
+
+                          <Tooltip title="Copy Quiz Code" arrow>
                           <IconButton
                             size="small"
                             onClick={() => {
@@ -463,12 +468,14 @@ export default function MyQuizzes() {
                           >
                             <ContentCopyIcon fontSize="small" />
                           </IconButton>
+                          </Tooltip>
                         </Box>
                       </Box>
                     </QuizCodeBox>
                   </CardContent>
 
                   <CardActions sx={{ p: 2, pt: 0, gap: 1, flexWrap: 'wrap' }}>
+                  <Tooltip title="Edit this quiz" arrow>
                     <EditButton
                       size="small"
                       startIcon={<EditIcon />}
@@ -477,6 +484,9 @@ export default function MyQuizzes() {
                     >
                       Edit
                     </EditButton>
+                    </Tooltip>
+
+                    <Tooltip title="View analytics & student scores" arrow>
                     <AnalyticsButton
                       size="small"
                       startIcon={<AnalyticsIcon />}
@@ -485,6 +495,9 @@ export default function MyQuizzes() {
                     >
                       Analytics
                     </AnalyticsButton>
+                    </Tooltip>
+
+                    <Tooltip title="Delete this quiz permanently" arrow>
                     <DeleteButton
                       size="small"
                       startIcon={<DeleteIcon />}
@@ -494,6 +507,8 @@ export default function MyQuizzes() {
                     >
                       {deleteLoading === quiz.id ? 'Deleting...' : 'Delete'}
                     </DeleteButton>
+                    </Tooltip>
+
                   </CardActions>
                 </QuizCard>
               </Grid>

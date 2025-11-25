@@ -11,7 +11,8 @@ import {
   AppBar,
   Toolbar,
   Chip,
-  Fade
+  Fade,
+  Tooltip
 } from '@mui/material';
 import { styled, keyframes, useTheme } from '@mui/material/styles';
 import {
@@ -474,6 +475,8 @@ export default function PlayQuiz() {
                   ⏱️ {quiz.timePerQuestion} seconds per question
                 </Typography>
               </Box>
+
+              <Tooltip title="Begin the quiz - timer will start" arrow placement="top">
               <StartButton
                 variant="contained"
                 size="large"
@@ -483,6 +486,7 @@ export default function PlayQuiz() {
               >
                 Start Quiz 🚀
               </StartButton>
+              </Tooltip>
             </Box>
           </QuizStartCard>
         ) : quizCompleted ? (
@@ -631,6 +635,14 @@ export default function PlayQuiz() {
               </Box>
 
               <Box sx={{ mt: 4, textAlign: 'center' }}>
+                <Tooltip
+                  title={selectedAnswer === null
+                    ? "Select an answer first"
+                    : (currentQuestionIndex < quiz.questions.length - 1 ? "Continue to next question" : "Submit quiz and see results")
+                  }
+                  arrow
+                >
+                 <span>
                 <Button
                   variant="contained"
                   size="large"
@@ -659,6 +671,8 @@ export default function PlayQuiz() {
                 >
                   {currentQuestionIndex < quiz.questions.length - 1 ? 'Next Question →' : 'Finish Quiz ✓'}
                 </Button>
+                </span>
+                </Tooltip>
               </Box>
             </QuizCardContainer>
           </>

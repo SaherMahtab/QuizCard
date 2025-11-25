@@ -9,7 +9,8 @@ import {
   Toolbar,
   TextField,
   Grid,
-  Card
+  Card,
+  Tooltip
 } from '@mui/material';
 import { styled, keyframes, useTheme } from '@mui/material/styles';
 import {
@@ -331,6 +332,8 @@ export default function StudentDashboard() {
             QuizCard - Student Portal
           </Typography>
           <DarkModeToggle />
+
+          <Tooltip title="Sign out of your account" arrow>
           <SecondaryButton
             startIcon={<LogoutIcon />}
             onClick={handleLogout}
@@ -339,6 +342,8 @@ export default function StudentDashboard() {
           >
             Logout
           </SecondaryButton>
+          </Tooltip>
+
         </Toolbar>
       </GlassAppBar>
 
@@ -377,6 +382,9 @@ export default function StudentDashboard() {
                   startAdornment: <QuizIcon sx={{ color: '#3b82f6', mr: 1 }} />
                 }}
               />
+
+              <Tooltip title={!quizCode ? "Enter a quiz code first" : "Start the quiz"} arrow>
+              <span>
               <PrimaryButton
                 size="large"
                 onClick={handleStartQuiz}
@@ -388,6 +396,8 @@ export default function StudentDashboard() {
               >
                 Start Quiz
               </PrimaryButton>
+              </span>
+              </Tooltip>
             </Box>
           </StyledCard>
         </WelcomeSection>
