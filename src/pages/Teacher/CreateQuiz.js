@@ -55,12 +55,14 @@ const MainCard = styled(Paper)({
   animation: `${fadeInUp} 0.6s ease-out`
 });
 
+//QuestionCard
 const QuestionCard = styled(Paper)({
   padding: 16,
   borderRadius: 12,
   marginTop: 12
 });
 
+//Styled TextField
 const StyledTextField = styled(TextField)({
   '& .MuiOutlinedInput-root': {
     borderRadius: '10px'
@@ -73,6 +75,7 @@ export default function CreateQuiz() {
   const { currentUser } = useAuth();
   const theme = useTheme();
 
+  //empty question template
   const emptyQuestion = () => ({
     questionText: '',
     type: 'single',
@@ -81,6 +84,7 @@ export default function CreateQuiz() {
     correctAnswers: []
   });
 
+  //Quiz state
   const [quizData, setQuizData] = useState({
     title: '',
     subject: '',
@@ -92,10 +96,12 @@ export default function CreateQuiz() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // Handler for quiz detail changes
   const handleQuizChange = (field, value) => {
     setQuizData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Handler for question changes
   const handleQuestionChange = (index, field, value) => {
     setQuizData(prev => {
       const q = [...prev.questions];
