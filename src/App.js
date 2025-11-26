@@ -15,6 +15,7 @@ import CreateQuiz from './pages/Teacher/CreateQuiz';
 import MyQuizzes from './pages/Teacher/MyQuizzes';
 import EditQuiz from './pages/Teacher/EditQuiz';
 import QuizAnalytics from './pages/Teacher/QuizAnalytics';
+import PreviewQuiz from './pages/Teacher/PreviewQuiz';
 
 // Student Pages
 import StudentDashboard from './pages/Student/Dashboard';
@@ -136,6 +137,15 @@ function App() {
                 element={
                   <ProtectedRoute role="teacher">
                     <QuizAnalytics />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/teacher/preview-quiz/:quizId"
+                element={
+                  <ProtectedRoute role="teacher">
+                    <PreviewQuiz />
                   </ProtectedRoute>
                 }
               />
